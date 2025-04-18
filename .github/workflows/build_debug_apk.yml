@@ -38,6 +38,11 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
+        
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;29.0.13113456"
 
       - name: Build APK
         run: flutter build apk --debug
