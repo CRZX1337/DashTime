@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       changelog:
-        description: 'Release changelog (optional)'
+        description: 'Release changelog (supports markdown)'
         required: false
         type: string
         default: 'Automated debug build from GitHub Actions'
@@ -67,45 +67,41 @@ jobs:
           name: app-debug
           path: build/app/outputs/flutter-apk/app-debug.apk
 
-      - name: Set release details
-        id: release_details
-        run: |
-          # Set tag name
-          if [ "${{ github.event.inputs.use_latest_tag }}" == "true" ]; then
-            echo "tag_name=debug-build-latest" >> $GITHUB_OUTPUT
-          else
-            echo "tag_name=debug-build-${{ github.run_number }}" >> $GITHUB_OUTPUT
-          fi
-          
-          # Set release title
-          if [ "${{ github.event.inputs.release_title }}" != "" ]; then
-            echo "title=${{ github.event.inputs.release_title }}" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.use_latest_tag }}" == "true" ]; then
-            echo "title=Latest Debug Build" >> $GITHUB_OUTPUT
-          else
-            echo "title=Debug Build ${{ github.run_number }}" >> $GITHUB_OUTPUT
-          fi
-          
-          # Set release body
-          if [ "${{ github.event.inputs.use_latest_tag }}" == "true" ]; then
-            echo "body=This is always the latest debug build of DashTime. Release Notes: ${{ github.event.inputs.changelog }} | Build Number: ${{ github.run_number }} | Build Date: $(date +"%B %d, %Y")" >> $GITHUB_OUTPUT
-          else
-            echo "body=${{ github.event.inputs.changelog }}" >> $GITHUB_OUTPUT
-          fi
-
       - name: Delete existing latest tag if needed
         if: ${{ github.event.inputs.use_latest_tag == 'true' }}
         run: |
-          git tag -d debug-build-latest || true
           git push --delete origin debug-build-latest || true
         continue-on-error: true
 
-      - name: Create Release
+      - name: Create numbered release
+        if: ${{ github.event.inputs.use_latest_tag != 'true' }}
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.release_details.outputs.tag_name }}
-          name: ${{ steps.release_details.outputs.title }}
-          body: ${{ steps.release_details.outputs.body }}
+          tag_name: debug-build-${{ github.run_number }}
+          name: ${{ github.event.inputs.release_title != '' && github.event.inputs.release_title || format('Debug Build {0}', github.run_number) }}
+          body: ${{ github.event.inputs.changelog }}
+          draft: false
+          prerelease: true
+          files: build/app/outputs/flutter-apk/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create latest release
+        if: ${{ github.event.inputs.use_latest_tag == 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: debug-build-latest
+          name: ${{ github.event.inputs.release_title != '' && github.event.inputs.release_title || 'Latest Debug Build' }}
+          body: |
+            ## Latest Debug Build
+            
+            This is always the latest debug build of DashTime.
+            
+            ### Release Notes:
+            ${{ github.event.inputs.changelog }}
+            
+            **Build Number:** ${{ github.run_number }}  
+            **Build Date:** ${{ github.event.created_at }}
           draft: false
           prerelease: true
           files: build/app/outputs/flutter-apk/app-debug.apk
