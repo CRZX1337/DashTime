@@ -23,6 +23,104 @@
             --purple-accent: #b035e0;
         }
         
+        /* Preloader Styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+        }
+
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+        }
+
+        .circle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--main-color);
+            animation: spin 1.5s linear infinite;
+        }
+
+        .circle:nth-child(2) {
+            border-top-color: var(--accent-color);
+            border-right-color: var(--accent-color);
+            animation-duration: 2s;
+        }
+
+        .circle:nth-child(3) {
+            border-top-color: var(--main-color);
+            border-left-color: var(--main-color);
+            animation-duration: 2.5s;
+        }
+
+        .speedometer-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5.5rem;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: pulse 2s ease-in-out infinite;
+            width: 80%;
+            height: 80%;
+        }
+
+        .speedometer-icon i {
+            margin: 0;
+            padding: 0;
+            display: block;
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -141,6 +239,9 @@
         .speedometer-preview {
             flex: 0 1 400px;
             position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
         
         .speedometer-circle {
@@ -155,6 +256,9 @@
             align-items: center;
             position: relative;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s;
         }
         
         .speedometer-circle::before {
@@ -206,22 +310,29 @@
             border-radius: 10px;
             position: relative;
             overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease-out;
         }
         
         .max-speed {
             border-left: 3px solid var(--orange-accent);
+            transition-delay: 0.4s;
         }
         
         .avg-speed {
             border-left: 3px solid var(--green-accent);
+            transition-delay: 0.6s;
         }
         
         .distance {
             border-left: 3px solid var(--blue-accent);
+            transition-delay: 0.8s;
         }
         
         .time {
             border-left: 3px solid var(--purple-accent);
+            transition-delay: 1.0s;
         }
         
         .stat-title {
@@ -242,6 +353,9 @@
 
         .app-features {
             flex: 0 1 500px;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
         
         .download-section {
@@ -430,6 +544,23 @@
             position: relative;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
             overflow: hidden;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 1s ease-out, transform 1s ease-out;
+        }
+        
+        .settings-showcase h2 {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transition-delay: 0.2s;
+        }
+        
+        .settings-showcase p {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transition-delay: 0.4s;
         }
         
         .settings-list {
@@ -446,6 +577,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        .setting-item:nth-child(1) {
+            transition-delay: 0.6s;
+        }
+        
+        .setting-item:nth-child(2) {
+            transition-delay: 0.8s;
+        }
+        
+        .setting-item:nth-child(3) {
+            transition-delay: 1.0s;
+        }
+        
+        .setting-item:nth-child(4) {
+            transition-delay: 1.2s;
         }
         
         .setting-item-left {
@@ -480,6 +630,10 @@
             background-color: rgba(0, 0, 0, 0.2);
             position: relative;
             margin-top: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transition-delay: 0.8s;
         }
         
         footer::before {
@@ -540,9 +694,181 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* Landing animations for main content */
+        .animate-in {
+            opacity: 1;
+            transform: translateY(0) scale(1) translateX(0);
+        }
+
+        /* Download popup styles */
+        .download-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: linear-gradient(135deg, #333333, #222222);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+            max-width: 90%;
+            width: 450px;
+            border: 1px solid rgba(180, 150, 255, 0.2);
+            overflow: hidden;
+        }
+        
+        .download-popup.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .download-popup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--main-color), var(--accent-color));
+        }
+        
+        .download-popup-icon {
+            font-size: 4rem;
+            color: var(--main-color);
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: pop-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .download-popup h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: white;
+            animation: slide-up 0.4s ease forwards;
+            animation-delay: 0.2s;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .download-popup p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: slide-up 0.4s ease forwards;
+            animation-delay: 0.3s;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        
+        @keyframes slide-up {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .download-popup-close {
+            background: linear-gradient(45deg, var(--main-color), var(--accent-color));
+            color: white;
+            border: none;
+            padding: 0.7rem 2rem;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fade-in 0.4s ease forwards;
+            animation-delay: 0.4s;
+            opacity: 0;
+            box-shadow: 0 4px 15px rgba(180, 150, 255, 0.4);
+        }
+        
+        .download-popup-close:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(180, 150, 255, 0.6);
+        }
+        
+        @keyframes fade-in {
+            to { opacity: 1; }
+        }
+        
+        .download-popup-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 9997;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .download-popup-bg.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Confetti effect */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: var(--main-color);
+            z-index: 9996;
+            opacity: 0;
+            top: -10px;
+            animation: confetti-fall 3s ease-in-out forwards;
+        }
+
+        .confetti:nth-child(2n) {
+            background-color: var(--accent-color);
+        }
+
+        .confetti:nth-child(3n) {
+            background-color: var(--green-accent);
+        }
+
+        .confetti:nth-child(4n) {
+            background-color: var(--orange-accent);
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="loader">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="speedometer-icon">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+        </div>
+        <div class="loading-text">LOADING DASHTIME</div>
+    </div>
+
     <header>
         <div class="container">
             <h1>DashTime</h1>
@@ -653,9 +979,12 @@
                 <div class="download-card">
                     <h3>Stable Version</h3>
                     <div class="version-info">Version 1.0.0 - Recommended for most users</div>
-                    <a href="https://github.com/CRZX1337/DashTime/releases/latest/download/app-release.apk" class="download-button">
-                        <i class="fas fa-download"></i>Download Stable
+                    <a href="#" id="stable-download-link" class="download-button">
+                        <i class="fas fa-download"></i><span id="stable-button-text">Download Stable</span>
                     </a>
+                    <div id="stable-loading" style="display: none; margin-top: 10px; font-size: 0.8rem; color: var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin"></i> Finding latest stable release...
+                    </div>
                 </div>
                 <div class="download-card">
                     <h3>Beta Version</h3>
@@ -675,15 +1004,78 @@
         <div class="container">
             <div class="social-links">
                 <a href="https://github.com/CRZX1337/DashTime" target="_blank"><i class="fab fa-github"></i></a>
-                <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
-                <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
             </div>
             <p>&copy; 2025 DashTime. All rights reserved.</p>
             <p style="margin-top: 0.5rem;">Developed by CryZuX</p>
         </div>
     </footer>
 
+    <!-- Download popup -->
+    <div class="download-popup-bg" id="downloadPopupBg"></div>
+    <div class="download-popup" id="downloadPopup">
+        <div class="download-popup-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3>Download Started</h3>
+        <p>Your download should begin automatically. If it doesn't, you can try again or check your browser settings.</p>
+        <button class="download-popup-close" id="downloadPopupClose">Got it!</button>
+    </div>
+
     <script>
+        // Preloader animation
+        window.addEventListener('load', function() {
+            // Simulate loading delay (remove in production if not needed)
+            setTimeout(function() {
+                const preloader = document.getElementById('preloader');
+                preloader.classList.add('hidden');
+                
+                // After preloader starts fading, begin content animations
+                setTimeout(function() {
+                    // Animate speedometer components
+                    document.querySelector('.speedometer-preview').classList.add('animate-in');
+                    document.querySelector('.speedometer-circle').classList.add('animate-in');
+                    
+                    // Animate stat panels
+                    document.querySelectorAll('.stat-panel').forEach(function(panel) {
+                        panel.classList.add('animate-in');
+                    });
+
+                    // Animate app features
+                    document.querySelector('.app-features').classList.add('animate-in');
+                    
+                    // Animate settings showcase and its children
+                    document.querySelector('.settings-showcase').classList.add('animate-in');
+                    document.querySelector('.settings-showcase h2').classList.add('animate-in');
+                    document.querySelector('.settings-showcase p').classList.add('animate-in');
+                    document.querySelectorAll('.setting-item').forEach(function(item) {
+                        item.classList.add('animate-in');
+                    });
+                    
+                    // Animate download section
+                    document.querySelector('.download-section').classList.add('animate-in');
+                    document.querySelectorAll('.download-card').forEach(function(card) {
+                        card.classList.add('animate-in');
+                    });
+                    
+                    // Animate footer
+                    document.querySelector('footer').classList.add('animate-in');
+                    
+                    // Animate existing scroll elements that are in view
+                    document.querySelectorAll('.animate-on-scroll').forEach(function(element) {
+                        const rect = element.getBoundingClientRect();
+                        if (rect.top <= window.innerHeight) {
+                            element.classList.add('visible');
+                        }
+                    });
+                }, 300); // Start content animations after preloader begins fading
+                
+                // Remove preloader from DOM after animation completes
+                setTimeout(function() {
+                    preloader.style.display = 'none';
+                }, 800);
+            }, 1500); // Adjust loading time as needed (1.5 seconds here)
+        });
+
         // Animations for scroll effect
         const animateElements = document.querySelectorAll('.animate-on-scroll');
         
@@ -704,64 +1096,189 @@
             observer.observe(element);
         });
 
-        // Auto-fetch latest beta release
+        // Auto-fetch latest releases
         document.addEventListener('DOMContentLoaded', function() {
+            // Beta download elements
             const betaLink = document.getElementById('beta-download-link');
             const betaButtonText = document.getElementById('beta-button-text');
             const betaLoading = document.getElementById('beta-loading');
 
-            // Set initial state
+            // Stable download elements
+            const stableLink = document.getElementById('stable-download-link');
+            const stableButtonText = document.getElementById('stable-button-text');
+            const stableLoading = document.getElementById('stable-loading');
+
+            // Set up beta download
             betaLink.addEventListener('click', function(e) {
                 if (betaLink.getAttribute('href') === '#') {
                     e.preventDefault();
                     betaLoading.style.display = 'block';
                     betaButtonText.textContent = 'Preparing Download...';
-                    fetchLatestBeta();
+                    fetchLatestRelease(true);
                 }
             });
 
-            // Function to fetch latest pre-release
-            function fetchLatestBeta() {
+            // Set up stable download
+            stableLink.addEventListener('click', function(e) {
+                if (stableLink.getAttribute('href') === '#') {
+                    e.preventDefault();
+                    stableLoading.style.display = 'block';
+                    stableButtonText.textContent = 'Preparing Download...';
+                    fetchLatestRelease(false);
+                }
+            });
+
+            // Function to fetch latest release
+            function fetchLatestRelease(isBeta) {
                 fetch('https://api.github.com/repos/CRZX1337/DashTime/releases')
                     .then(response => response.json())
                     .then(releases => {
-                        // Filter for pre-releases
-                        const preReleases = releases.filter(release => release.prerelease);
+                        // Select elements based on release type
+                        const link = isBeta ? betaLink : stableLink;
+                        const buttonText = isBeta ? betaButtonText : stableButtonText;
+                        const loading = isBeta ? betaLoading : stableLoading;
+                        const apkName = isBeta ? 'app-debug.apk' : 'app-release.apk';
                         
-                        if (preReleases.length > 0) {
-                            // Get the latest pre-release
-                            const latestPreRelease = preReleases[0];
+                        // Filter releases
+                        const filteredReleases = isBeta 
+                            ? releases.filter(release => release.prerelease)
+                            : releases.filter(release => !release.prerelease);
+                        
+                        if (filteredReleases.length > 0) {
+                            // Get the latest release of the specified type
+                            const latestRelease = filteredReleases[0];
                             
-                            // Find the debug APK asset
-                            const debugApk = latestPreRelease.assets.find(asset => 
-                                asset.name.includes('app-debug.apk'));
+                            // Find the APK asset
+                            const apkAsset = latestRelease.assets.find(asset => 
+                                asset.name.includes(apkName));
                             
-                            if (debugApk) {
+                            if (apkAsset) {
                                 // Update the download link
-                                betaLink.setAttribute('href', debugApk.browser_download_url);
-                                betaButtonText.textContent = 'Download Beta';
-                                betaLoading.style.display = 'none';
+                                link.setAttribute('href', apkAsset.browser_download_url);
+                                buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
+                                loading.style.display = 'none';
                                 
-                                // Automatically click to start download
-                                betaLink.click();
+                                // Automatically click to start download if this was a user click
+                                if (loading.style.display === 'block') {
+                                    link.click();
+                                }
                             } else {
-                                betaButtonText.textContent = 'Download Beta';
-                                betaLoading.textContent = 'No debug APK found in latest release';
+                                buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
+                                loading.textContent = `No ${apkName} found in latest release`;
+                                loading.style.display = 'block';
                             }
                         } else {
-                            betaButtonText.textContent = 'Download Beta';
-                            betaLoading.textContent = 'No pre-releases found';
+                            buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
+                            loading.textContent = isBeta ? 'No pre-releases found' : 'No stable releases found';
+                            loading.style.display = 'block';
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching releases:', error);
-                        betaButtonText.textContent = 'Download Beta';
-                        betaLoading.textContent = 'Error loading latest release';
+                        const buttonText = isBeta ? betaButtonText : stableButtonText;
+                        const loading = isBeta ? betaLoading : stableLoading;
+                        buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
+                        loading.textContent = 'Error loading latest release';
+                        loading.style.display = 'block';
                     });
             }
 
-            // Pre-fetch the latest beta URL when page loads
-            fetchLatestBeta();
+            // Pre-fetch the latest releases when page loads
+            fetchLatestRelease(true);  // Beta
+            fetchLatestRelease(false); // Stable
+        });
+
+        // Download popup functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const stableLink = document.getElementById('stable-download-link');
+            const betaLink = document.getElementById('beta-download-link');
+            const downloadPopup = document.getElementById('downloadPopup');
+            const downloadPopupBg = document.getElementById('downloadPopupBg');
+            const downloadPopupClose = document.getElementById('downloadPopupClose');
+            
+            // Show popup when download starts
+            function showDownloadPopup(version) {
+                // Update popup content based on version
+                const popupTitle = downloadPopup.querySelector('h3');
+                popupTitle.textContent = version === 'stable' ? 
+                    'Stable Version Download Started' : 
+                    'Beta Version Download Started';
+                
+                // Show popup with background
+                downloadPopupBg.classList.add('show');
+                downloadPopup.classList.add('show');
+                
+                // Create confetti effect
+                createConfetti();
+            }
+            
+            // Create confetti effect
+            function createConfetti() {
+                const confettiCount = 100;
+                const container = document.body;
+                
+                // Remove any existing confetti
+                document.querySelectorAll('.confetti').forEach(el => el.remove());
+                
+                // Create new confetti
+                for (let i = 0; i < confettiCount; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    
+                    // Random position
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    
+                    // Random size
+                    const size = Math.random() * 8 + 5;
+                    confetti.style.width = size + 'px';
+                    confetti.style.height = size + 'px';
+                    
+                    // Random animation duration
+                    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    
+                    // Random animation delay
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    
+                    // Add to body
+                    container.appendChild(confetti);
+                    
+                    // Remove after animation
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 5000);
+                }
+            }
+            
+            // Close popup
+            function closeDownloadPopup() {
+                downloadPopupBg.classList.remove('show');
+                downloadPopup.classList.remove('show');
+            }
+            
+            // Add event listeners 
+            if (stableLink) {
+                stableLink.addEventListener('click', function() {
+                    setTimeout(() => {
+                        showDownloadPopup('stable');
+                    }, 1000); // Delay to ensure download has started
+                });
+            }
+            
+            if (betaLink) {
+                betaLink.addEventListener('click', function() {
+                    setTimeout(() => {
+                        showDownloadPopup('beta');
+                    }, 1000); // Delay to ensure download has started
+                });
+            }
+            
+            if (downloadPopupClose) {
+                downloadPopupClose.addEventListener('click', closeDownloadPopup);
+            }
+            
+            if (downloadPopupBg) {
+                downloadPopupBg.addEventListener('click', closeDownloadPopup);
+            }
         });
     </script>
 </body>
