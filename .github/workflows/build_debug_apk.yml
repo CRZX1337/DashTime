@@ -77,25 +77,4 @@ jobs:
           prerelease: true
           files: build/app/outputs/flutter-apk/app-debug.apk
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Update latest release tag
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: debug-build-latest
-          name: Latest Debug Build
-          body: |
-            ## Latest Debug Build
-            
-            This is always the latest debug build of DashTime.
-            
-            ### Release Notes:
-            ${{ github.event.inputs.changelog }}
-            
-            **Build Number:** ${{ github.run_number }}  
-            **Build Date:** ${{ github.event.created_at }}
-          draft: false
-          prerelease: true
-          files: build/app/outputs/flutter-apk/app-debug.apk
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

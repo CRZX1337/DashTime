@@ -69,6 +69,23 @@ class LocationService {
   // Last update timestamp for delta calculations
   DateTime? _lastUpdateTime;
 
+  // Simulation mode properties
+  bool _isSimulationMode = false;
+  double _simulatedSpeed = 0.0;
+  Timer? _simulationTimer;
+  final math.Random _random = math.Random();
+  
+  // Additional properties for more realistic simulation
+  String _demoScenario = 'city'; // city, highway, racetrack, mountain
+  int _scenarioPhase = 0; // Used to track phases of the scenario
+  int _phaseCounter = 0; // Counter within each phase
+  double _targetSpeed = 0.0; // Target speed for acceleration/deceleration
+  double _accelerationRate = 1.0; // Controls how quickly speed changes (1.0 = normal, 2.0 = twice as fast)
+  
+  // Getters for simulation status
+  bool get isSimulationMode => _isSimulationMode;
+  double get simulatedSpeed => _simulatedSpeed;
+
   // Start tracking location
   Future<bool> startTracking() async {
     // Always use GPS - removed conditional check
@@ -176,6 +193,21 @@ class LocationService {
 
   // Handle position updates
   void _onPositionUpdate(Position position) {
+    // Special handling for simulation mode
+    if (_isSimulationMode) {
+      // Check if this is a real GPS update by checking timestamp type
+      // Our simulated positions use local time (non-UTC)
+      bool isRealGpsUpdate = position.timestamp.isUtc;
+      
+      if (isRealGpsUpdate) {
+        // In simulation mode, we only take real GPS updates to update our position reference
+        // but we don't process them for speed/distance as that would conflict with simulation
+        _currentPosition = position;
+        print("Real GPS update received during simulation - updating reference position only");
+        return;
+      }
+    }
+    
     print("Position update received: ${position.latitude}, ${position.longitude}, accuracy: ${position.accuracy}m");
     
     // Track GPS accuracy
@@ -246,11 +278,16 @@ class LocationService {
       }
     }
     
-    // Apply the adaptive smoothing
-    if (_currentSpeed == 0) {
-      _currentSpeed = filteredSpeed; // First reading
+    // In simulation mode, use the simulated speed directly without smoothing
+    if (_isSimulationMode) {
+      _currentSpeed = _simulatedSpeed;
     } else {
-      _currentSpeed = (_currentSpeed * (1 - smoothingFactor)) + (filteredSpeed * smoothingFactor);
+      // Apply the adaptive smoothing
+      if (_currentSpeed == 0) {
+        _currentSpeed = filteredSpeed; // First reading
+      } else {
+        _currentSpeed = (_currentSpeed * (1 - smoothingFactor)) + (filteredSpeed * smoothingFactor);
+      }
     }
     
     // Ensure speed is never negative
@@ -471,6 +508,314 @@ class LocationService {
     } catch (e) {
       print("Last resort tracking failed: $e");
       return false;
+    }
+  }
+
+  // Enable simulation mode with a specific speed
+  void enableSimulation(double speed, {double accelerationRate = 1.0}) {
+    _simulatedSpeed = 0.0; // Start from zero and accelerate to target
+    _targetSpeed = speed;
+    _accelerationRate = accelerationRate.clamp(0.1, 5.0); // Limit to reasonable values
+    _isSimulationMode = true;
+    _scenarioPhase = 0;
+    _phaseCounter = 0;
+    
+    // If no current position exists, create a default one
+    if (_currentPosition == null) {
+      print("No initial position, creating default position for simulation");
+      _currentPosition = Position(
+        latitude: 37.4220, // Default location (Google HQ)
+        longitude: -122.0841,
+        timestamp: DateTime.now(),
+        accuracy: 3.0,
+        altitude: 0.0,
+        heading: 0.0,
+        speed: 0.0,
+        speedAccuracy: 1.0,
+        altitudeAccuracy: 1.0,
+        headingAccuracy: 1.0,
+      );
+    }
+    
+    // Set demo scenario based on target speed
+    if (speed <= 40) {
+      _demoScenario = 'city';
+    } else if (speed <= 80) {
+      _demoScenario = 'mountain';
+    } else if (speed <= 120) {
+      _demoScenario = 'highway';
+    } else {
+      _demoScenario = 'racetrack';
+    }
+    
+    // Start simulation timer if not already running
+    _simulationTimer?.cancel();
+    _simulationTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
+      if (!_isSimulationMode) {
+        timer.cancel();
+        return;
+      }
+      
+      _generateSimulatedLocation();
+    });
+    
+    print("Location simulation enabled with speed: $_targetSpeed km/h, acceleration: $_accelerationRate, scenario: $_demoScenario");
+  }
+  
+  // Disable simulation mode
+  void disableSimulation() {
+    _isSimulationMode = false;
+    _simulationTimer?.cancel();
+    _simulationTimer = null;
+    _simulatedSpeed = 0.0;
+    
+    print("Location simulation disabled");
+  }
+  
+  // Generate simulated location data based on current position and simulated speed
+  void _generateSimulatedLocation() {
+    if (!_isSimulationMode || _currentPosition == null) return;
+    
+    // Update the simulated speed based on scenario
+    _updateSimulatedSpeed();
+    
+    // Speed is in km/h, convert to m/s for calculations
+    final speedMps = _simulatedSpeed / 3.6;
+    
+    // Current coordinates
+    final lat = _currentPosition!.latitude;
+    final lng = _currentPosition!.longitude;
+    
+    // Distance traveled in simulation interval (in meters)
+    final distance = speedMps * 0.8; // t = 0.8 second
+    
+    // Generate heading based on scenario
+    double heading = _generateRealisticHeading();
+    
+    // Convert heading to radians
+    final headingRad = heading * math.pi / 180;
+    
+    // Earth's radius in meters
+    const earthRadius = 6378137.0;
+    
+    // Calculate new position using flat earth approximation
+    final newLat = lat + (distance * math.cos(headingRad)) / (earthRadius * math.pi / 180);
+    final newLng = lng + (distance * math.sin(headingRad)) / (earthRadius * math.cos(lat * math.pi / 180) * math.pi / 180);
+    
+    // Create simulated position
+    final simulatedPosition = Position(
+      latitude: newLat,
+      longitude: newLng,
+      timestamp: DateTime.now(),
+      accuracy: 3.0, // Good GPS accuracy
+      altitude: _currentPosition!.altitude,
+      heading: heading,
+      speed: speedMps, // speed in m/s
+      speedAccuracy: 1.0,
+      altitudeAccuracy: 1.0,
+      headingAccuracy: 1.0,
+    );
+    
+    // Force direct speed update for simulation
+    _currentSpeed = _simulatedSpeed;
+    
+    // Process the simulated position as if it came from GPS
+    _onPositionUpdate(simulatedPosition);
+    
+    // Directly broadcast speed update to ensure UI gets notified
+    _speedController.add(_currentSpeed);
+    
+    print("Simulated speed: $_simulatedSpeed km/h");
+  }
+  
+  // Generate a realistic heading based on scenario
+  double _generateRealisticHeading() {
+    double heading = _currentPosition!.heading;
+    
+    switch (_demoScenario) {
+      case 'city':
+        // City driving has frequent turns
+        if (_phaseCounter % 10 == 0) {
+          // Make occasional sharp turns (90 degrees +/- 20)
+          heading = (heading + (90 * (_random.nextBool() ? 1 : -1) + (_random.nextDouble() * 40 - 20))) % 360;
+        } else {
+          // Smaller corrections
+          heading = (heading + (_random.nextDouble() * 10 - 5)) % 360;
+        }
+        break;
+        
+      case 'highway':
+        // Highway has very slight curves
+        heading = (heading + (_random.nextDouble() * 2 - 1)) % 360;
+        break;
+        
+      case 'racetrack':
+        // Racetrack has rhythmic turns
+        if (_phaseCounter % 15 == 0) {
+          // Sharp turn in alternating directions
+          final turnDirection = _scenarioPhase % 2 == 0 ? 1 : -1;
+          heading = (heading + (60 * turnDirection)) % 360;
+        } else {
+          // Straight sections
+          heading = (heading + (_random.nextDouble() * 1 - 0.5)) % 360;
+        }
+        break;
+        
+      case 'mountain':
+        // Mountain roads have consistent winding
+        if (_phaseCounter % 8 == 0) {
+          // Alternating moderate turns
+          final turnDirection = _scenarioPhase % 2 == 0 ? 1 : -1;
+          heading = (heading + (30 * turnDirection + (_random.nextDouble() * 10 - 5))) % 360;
+        } else {
+          // Slight corrections
+          heading = (heading + (_random.nextDouble() * 5 - 2.5)) % 360;
+        }
+        break;
+        
+      default:
+        // Default small variation
+        heading = (heading + (_random.nextDouble() * 6 - 3)) % 360;
+    }
+    
+    return heading;
+  }
+  
+  // Update the simulated speed based on scenario
+  void _updateSimulatedSpeed() {
+    _phaseCounter++;
+    
+    // Regular scenario phase transitions
+    if (_phaseCounter >= 20) {
+      _phaseCounter = 0;
+      _scenarioPhase = (_scenarioPhase + 1) % 5; // 5 phases in each scenario
+    }
+    
+    // Calculate speed pattern based on scenario
+    switch (_demoScenario) {
+      case 'city':
+        _updateCityDriving();
+        break;
+        
+      case 'highway':
+        _updateHighwayDriving();
+        break;
+        
+      case 'racetrack':
+        _updateRacetrackDriving();
+        break;
+        
+      case 'mountain':
+        _updateMountainDriving();
+        break;
+        
+      default:
+        // Simple approach for default
+        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+    }
+    
+    // Ensure speed is never negative
+    _simulatedSpeed = math.max(0, _simulatedSpeed);
+  }
+  
+  // City driving patterns (stop and go traffic, traffic lights)
+  void _updateCityDriving() {
+    switch (_scenarioPhase) {
+      case 0: // Accelerating from stop
+        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (3.0 * _accelerationRate));
+        break;
+        
+      case 1: // Cruising
+        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        break;
+        
+      case 2: // Slowing for traffic/light
+        _simulatedSpeed = math.max(5, _simulatedSpeed - (2.0 * _accelerationRate));
+        break;
+        
+      case 3: // Stopped or very slow
+        _simulatedSpeed = math.max(0, _simulatedSpeed - (2.5 * _accelerationRate));
+        if (_simulatedSpeed < 3) _simulatedSpeed = 0;
+        break;
+        
+      case 4: // Accelerating again
+        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (2.5 * _accelerationRate));
+        break;
+    }
+  }
+  
+  // Highway driving patterns (consistent high speed with occasional slowdowns)
+  void _updateHighwayDriving() {
+    switch (_scenarioPhase) {
+      case 0: // Accelerating to highway speed
+        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (2.0 * _accelerationRate));
+        break;
+        
+      case 1: // Cruising at target
+        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        break;
+        
+      case 2: // Slight slowdown (traffic)
+        _simulatedSpeed = math.max(_targetSpeed * 0.7, _simulatedSpeed - (1.0 * _accelerationRate));
+        break;
+        
+      case 3: // Resuming speed
+        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (1.5 * _accelerationRate));
+        break;
+        
+      case 4: // Slight variation in speed
+        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 8 - 4);
+        break;
+    }
+  }
+  
+  // Racetrack driving patterns (high speed, hard acceleration and braking)
+  void _updateRacetrackDriving() {
+    switch (_scenarioPhase) {
+      case 0: // Hard acceleration
+        _simulatedSpeed = math.min(_targetSpeed * 1.1, _simulatedSpeed + (5.0 * _accelerationRate));
+        break;
+        
+      case 1: // Top speed on straight
+        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 10);
+        break;
+        
+      case 2: // Hard braking for turn
+        _simulatedSpeed = math.max(_targetSpeed * 0.6, _simulatedSpeed - (4.0 * _accelerationRate));
+        break;
+        
+      case 3: // Through the turn
+        _simulatedSpeed = _simulatedSpeed - (1.0 * _accelerationRate) + (_random.nextDouble() * 2);
+        break;
+        
+      case 4: // Accelerating out of turn
+        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (4.0 * _accelerationRate));
+        break;
+    }
+  }
+  
+  // Mountain driving patterns (winding roads, varied speeds)
+  void _updateMountainDriving() {
+    switch (_scenarioPhase) {
+      case 0: // Uphill section
+        _simulatedSpeed = math.max(_targetSpeed * 0.7, _simulatedSpeed - (1.0 * _accelerationRate));
+        break;
+        
+      case 1: // Cruising on straight section
+        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        break;
+        
+      case 2: // Slowing for curve
+        _simulatedSpeed = math.max(_targetSpeed * 0.5, _simulatedSpeed - (2.0 * _accelerationRate));
+        break;
+        
+      case 3: // Through tight curves
+        _simulatedSpeed = _targetSpeed * 0.6 + (_random.nextDouble() * 5 - 2.5);
+        break;
+        
+      case 4: // Accelerating on straightaway
+        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (2.0 * _accelerationRate));
+        break;
     }
   }
 

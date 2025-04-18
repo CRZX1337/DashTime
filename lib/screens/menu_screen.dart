@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/theme.dart';
 
-class MenuScreen extends StatelessWidget {
+class MenuScreen extends StatefulWidget {
   final VoidCallback onSpeedometerTap;
   final VoidCallback onHistoryTap;
   final VoidCallback onSettingsTap;
@@ -13,6 +15,194 @@ class MenuScreen extends StatelessWidget {
     required this.onHistoryTap,
     required this.onSettingsTap,
   });
+
+  @override
+  State<MenuScreen> createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  Timer? _devMenuTimer;
+  bool _isHolding = false;
+
+  @override
+  void dispose() {
+    _devMenuTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startDevMenuTimer() {
+    _isHolding = true;
+    _devMenuTimer?.cancel();
+    _devMenuTimer = Timer(const Duration(seconds: 5), () {
+      if (_isHolding) {
+        _showDevMenu();
+      }
+    });
+  }
+
+  void _cancelDevMenuTimer() {
+    _isHolding = false;
+    _devMenuTimer?.cancel();
+  }
+
+  Future<void> _openGitHub() async {
+    final Uri url = Uri.parse('https://github.com/CryZuX/DashTimeRevamped');
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  void _showDevMenu() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardDark,
+        title: const Text(
+          'Developer Menu',
+          style: TextStyle(color: AppTheme.textDark),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDevMenuItem(
+              icon: Icons.bug_report,
+              title: 'Debug Information',
+              onTap: () {
+                Navigator.pop(context);
+                // Show debug info dialog
+                _showDebugInfo();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildDevMenuItem(
+              icon: Icons.code,
+              title: 'GitHub Repository',
+              onTap: () {
+                Navigator.pop(context);
+                _openGitHub();
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildDevMenuItem(
+              icon: Icons.data_usage,
+              title: 'App Statistics',
+              onTap: () {
+                Navigator.pop(context);
+                // Show app statistics
+                _showAppStatistics();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: AppTheme.primaryColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDebugInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardDark,
+        title: const Text(
+          'Debug Information',
+          style: TextStyle(color: AppTheme.textDark),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('App Version: 1.0.0', style: TextStyle(color: AppTheme.textDark)),
+            SizedBox(height: 8),
+            Text('Build: Development', style: TextStyle(color: AppTheme.textDark)),
+            SizedBox(height: 8),
+            Text('Device: Flutter Emulator', style: TextStyle(color: AppTheme.textDark)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: AppTheme.primaryColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAppStatistics() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardDark,
+        title: const Text(
+          'App Statistics',
+          style: TextStyle(color: AppTheme.textDark),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Sessions: 0', style: TextStyle(color: AppTheme.textDark)),
+            SizedBox(height: 8),
+            Text('Total Distance: 0 km', style: TextStyle(color: AppTheme.textDark)),
+            SizedBox(height: 8),
+            Text('Max Speed: 0 km/h', style: TextStyle(color: AppTheme.textDark)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: AppTheme.primaryColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDevMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: AppTheme.primaryColor,
+              size: 24,
+            ),
+            const SizedBox(width: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppTheme.textDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,19 +242,23 @@ class MenuScreen extends StatelessWidget {
               
               const SizedBox(height: 8),
               
-              // App subtitle
+              // App subtitle with long press detection for developer menu
               Center(
-                child: Text(
-                  'GPS Speedometer',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppTheme.primaryColor,
-                    letterSpacing: 2.0,
+                child: GestureDetector(
+                  onLongPressStart: (_) => _startDevMenuTimer(),
+                  onLongPressEnd: (_) => _cancelDevMenuTimer(),
+                  child: Text(
+                    'GPS Speedometer',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppTheme.primaryColor,
+                      letterSpacing: 2.0,
+                    ),
+                  ).animate().fadeIn(delay: 200.milliseconds).slideY(
+                    begin: -0.2,
+                    end: 0,
+                    duration: 400.milliseconds,
+                    curve: Curves.easeOutQuart,
                   ),
-                ).animate().fadeIn(delay: 200.milliseconds).slideY(
-                  begin: -0.2,
-                  end: 0,
-                  duration: 400.milliseconds,
-                  curve: Curves.easeOutQuart,
                 ),
               ),
               
@@ -81,7 +275,7 @@ class MenuScreen extends StatelessWidget {
                         context,
                         'Speedometer',
                         Icons.speed,
-                        onSpeedometerTap,
+                        widget.onSpeedometerTap,
                         delay: 300.milliseconds,
                       ),
                       
@@ -91,7 +285,7 @@ class MenuScreen extends StatelessWidget {
                         context,
                         'History',
                         Icons.history,
-                        onHistoryTap,
+                        widget.onHistoryTap,
                         delay: 400.milliseconds,
                       ),
                       
@@ -101,7 +295,7 @@ class MenuScreen extends StatelessWidget {
                         context,
                         'Settings',
                         Icons.settings,
-                        onSettingsTap,
+                        widget.onSettingsTap,
                         delay: 500.milliseconds,
                       ),
                     ],
