@@ -1,10 +1,11 @@
 # DashTimeRevamped
 
-![DashTime Logo](https://img.shields.io/badge/DashTimeRevamped-GPS%20Speedometer-blue?style=for-the-badge)
-![Build Status](https://img.shields.io/github/workflow/status/CryZuX/DashTimeRevamped/Build?style=for-the-badge)
-![Latest Release](https://img.shields.io/github/v/release/CryZuX/DashTimeRevamped?include_prereleases&style=for-the-badge)
-![License](https://img.shields.io/github/license/CryZuX/DashTimeRevamped?style=for-the-badge)
-![Issues](https://img.shields.io/github/issues/CryZuX/DashTimeRevamped?style=for-the-badge)
+[![DashTime](https://img.shields.io/badge/DashTime-GPS%20Speedometer-blue?style=flat-square&logo=github)](https://github.com/CRZX1337/DashTime)
+[![License](https://img.shields.io/github/license/CRZX1337/DashTime?style=flat-square)](https://github.com/CRZX1337/DashTime/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/CRZX1337/DashTime?include_prereleases&style=flat-square)](https://github.com/CRZX1337/DashTime/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/CRZX1337/DashTime?style=flat-square)](https://github.com/CRZX1337/DashTime/commits/main)
+[![Kotlin](https://img.shields.io/badge/kotlin-9.1%25-purple?style=flat-square&logo=kotlin)](https://kotlinlang.org/)
+[![Dart](https://img.shields.io/badge/dart-99.9%25-teal?style=flat-square&logo=dart)](https://dart.dev/)
 
 ## Precision Speed & GPS Metrics at Your Fingertips
 
@@ -21,10 +22,10 @@ DashTimeRevamped is a powerful, intuitive GPS speedometer and measurement tool d
 ## 📱 Installation
 
 ### Beta Testing
-Download the latest debug APK from the [Releases page](https://github.com/CryZuX/DashTimeRevamped/releases). Our automated CI builds a new debug version with every push to the main branch!
+Download the latest debug APK from the [Releases page](https://github.com/CRZX1337/DashTime/releases). Our automated CI builds a new debug version with every push to the main branch!
 
 ### Stable Release
-Official stable releases will be published on the [Releases page](https://github.com/CryZuX/DashTimeRevamped/releases) once they're ready for public use.
+Official stable releases will be published on the [Releases page](https://github.com/CRZX1337/DashTime/releases) once they're ready for public use.
 
 ## 🔒 Privacy
 
