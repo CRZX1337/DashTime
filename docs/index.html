@@ -1667,8 +1667,25 @@
                             changelog.innerHTML = getChangelogSummary(parsedChangelog);
                             
                             // Find the APK asset
-                            const apkAsset = latestRelease.assets.find(asset => 
-                                asset.name.includes(apkName));
+                            let apkAsset = null;
+                            
+                            if (isBeta) {
+                                // For beta, look for app-debug.apk
+                                apkAsset = latestRelease.assets.find(asset => 
+                                    asset.name.includes(apkName));
+                            } else {
+                                // For stable, look for DashTime release APK with various naming patterns
+                                apkAsset = latestRelease.assets.find(asset => 
+                                    asset.name.toLowerCase().includes('dashtime') && 
+                                    asset.name.toLowerCase().includes('release') &&
+                                    asset.name.endsWith('.apk'));
+                                
+                                // If not found, fall back to app-release.apk
+                                if (!apkAsset) {
+                                    apkAsset = latestRelease.assets.find(asset => 
+                                        asset.name.includes(apkName));
+                                }
+                            }
                             
                             if (apkAsset) {
                                 // Update the download link
@@ -1677,7 +1694,9 @@
                                 loading.style.display = 'none';
                             } else {
                                 buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
-                                loading.textContent = `No ${apkName} found in latest release`;
+                                loading.textContent = isBeta ? 
+                                    `No ${apkName} found in latest release` : 
+                                    `No DashTime APK found in latest release`;
                                 loading.style.display = 'block';
                             }
                         } else {
