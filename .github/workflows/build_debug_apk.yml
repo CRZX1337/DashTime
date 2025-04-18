@@ -20,6 +20,13 @@ jobs:
           distribution: 'zulu'
           java-version: '11'
 
+      - name: Fix gradle.properties
+        run: |
+          if [ -f "android/gradle.properties" ]; then
+            sed -i '/org.gradle.java.home/d' android/gradle.properties
+            echo "# Removed Windows JDK path for CI build" >> android/gradle.properties
+          fi
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
