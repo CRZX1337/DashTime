@@ -660,9 +660,12 @@
                 <div class="download-card">
                     <h3>Beta Version</h3>
                     <div class="version-info">Latest features and improvements. May contain occasional bugs.</div>
-                    <a href="https://github.com/CRZX1337/DashTime/releases/download/debug-build-latest/app-debug.apk" class="download-button">
-                        <i class="fas fa-flask"></i>Download Beta
+                    <a href="#" id="beta-download-link" class="download-button">
+                        <i class="fas fa-flask"></i><span id="beta-button-text">Download Beta</span>
                     </a>
+                    <div id="beta-loading" style="display: none; margin-top: 10px; font-size: 0.8rem; color: var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin"></i> Finding latest beta...
+                    </div>
                 </div>
             </div>
         </div>
@@ -699,6 +702,66 @@
         
         animateElements.forEach(element => {
             observer.observe(element);
+        });
+
+        // Auto-fetch latest beta release
+        document.addEventListener('DOMContentLoaded', function() {
+            const betaLink = document.getElementById('beta-download-link');
+            const betaButtonText = document.getElementById('beta-button-text');
+            const betaLoading = document.getElementById('beta-loading');
+
+            // Set initial state
+            betaLink.addEventListener('click', function(e) {
+                if (betaLink.getAttribute('href') === '#') {
+                    e.preventDefault();
+                    betaLoading.style.display = 'block';
+                    betaButtonText.textContent = 'Preparing Download...';
+                    fetchLatestBeta();
+                }
+            });
+
+            // Function to fetch latest pre-release
+            function fetchLatestBeta() {
+                fetch('https://api.github.com/repos/CRZX1337/DashTime/releases')
+                    .then(response => response.json())
+                    .then(releases => {
+                        // Filter for pre-releases
+                        const preReleases = releases.filter(release => release.prerelease);
+                        
+                        if (preReleases.length > 0) {
+                            // Get the latest pre-release
+                            const latestPreRelease = preReleases[0];
+                            
+                            // Find the debug APK asset
+                            const debugApk = latestPreRelease.assets.find(asset => 
+                                asset.name.includes('app-debug.apk'));
+                            
+                            if (debugApk) {
+                                // Update the download link
+                                betaLink.setAttribute('href', debugApk.browser_download_url);
+                                betaButtonText.textContent = 'Download Beta';
+                                betaLoading.style.display = 'none';
+                                
+                                // Automatically click to start download
+                                betaLink.click();
+                            } else {
+                                betaButtonText.textContent = 'Download Beta';
+                                betaLoading.textContent = 'No debug APK found in latest release';
+                            }
+                        } else {
+                            betaButtonText.textContent = 'Download Beta';
+                            betaLoading.textContent = 'No pre-releases found';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching releases:', error);
+                        betaButtonText.textContent = 'Download Beta';
+                        betaLoading.textContent = 'Error loading latest release';
+                    });
+            }
+
+            // Pre-fetch the latest beta URL when page loads
+            fetchLatestBeta();
         });
     </script>
 </body>
