@@ -1157,11 +1157,6 @@
                                 link.setAttribute('href', apkAsset.browser_download_url);
                                 buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
                                 loading.style.display = 'none';
-                                
-                                // Automatically click to start download if this was a user click
-                                if (loading.style.display === 'block') {
-                                    link.click();
-                                }
                             } else {
                                 buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
                                 loading.textContent = `No ${apkName} found in latest release`;
