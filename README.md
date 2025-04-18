@@ -19,7 +19,7 @@ DashTime is a powerful, intuitive GPS speedometer and measurement tool designed 
 ## 📱 Installation
 
 ### Beta Testing
-Download the latest debug APK from the [Releases page](https://github.com/CRZX1337/DashTime/releases). Our automated CI/CD pipeline builds a new debug version with every push to the main branch!
+Download the latest debug APK from the [Releases page](https://github.com/CRZX1337/DashTime/releases). Our automated CI builds a new debug version with every push to the main branch!
 
 ### Stable Release
 Official stable releases will be published on the [Releases page](https://github.com/CRZX1337/DashTime/releases) once they're ready for public use.
