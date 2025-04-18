@@ -680,8 +680,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
                 items: const [
                   DropdownMenuItem(
-                    value: 120,
-                    child: Text('120', style: TextStyle(color: Colors.white)),
+                    value: 60,
+                    child: Text('60', style: TextStyle(color: Colors.white)),
+                  ),
+                  DropdownMenuItem(
+                    value: 100,
+                    child: Text('100', style: TextStyle(color: Colors.white)),
                   ),
                   DropdownMenuItem(
                     value: 180,
