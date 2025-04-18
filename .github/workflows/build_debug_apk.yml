@@ -12,11 +12,6 @@ on:
         required: false
         type: string
         default: 'Automated debug build from GitHub Actions'
-      use_latest_tag:
-        description: 'Use debug-build-latest tag (overrides previous latest)'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: write  # Required to create releases
@@ -68,13 +63,11 @@ jobs:
           path: build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Delete existing latest tag if needed
-        if: ${{ github.event.inputs.use_latest_tag == 'true' }}
         run: |
           git push --delete origin debug-build-latest || true
         continue-on-error: true
 
       - name: Create numbered release
-        if: ${{ github.event.inputs.use_latest_tag != 'true' }}
         uses: softprops/action-gh-release@v1
         with:
           tag_name: debug-build-${{ github.run_number }}
@@ -86,12 +79,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: Create latest release
-        if: ${{ github.event.inputs.use_latest_tag == 'true' }}
+      - name: Update latest release tag
         uses: softprops/action-gh-release@v1
         with:
           tag_name: debug-build-latest
-          name: ${{ github.event.inputs.release_title != '' && github.event.inputs.release_title || 'Latest Debug Build' }}
+          name: Latest Debug Build
           body: |
             ## Latest Debug Build
             
