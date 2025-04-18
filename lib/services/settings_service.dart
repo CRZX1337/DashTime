@@ -49,10 +49,8 @@ class SettingsService extends ChangeNotifier {
     // Apply keep screen on setting
     await WakelockPlus.toggle(enable: _settings.keepScreenOn);
     
-    // If screen should stay on, request battery optimization exemption
-    if (_settings.keepScreenOn && Platform.isAndroid) {
-      await _requestBatteryOptimizationExemption();
-    }
+    // Don't automatically request battery optimization exemption during app init
+    // This will be handled by the onboarding flow instead
   }
 
   // Request battery optimization exemption
