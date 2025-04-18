@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="DashTime - Advanced GPS Speedometer & Speed Tracker application for Android">
+    <meta name="theme-color" content="#474747">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>DashTime - GPS Speedometer</title>
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <!-- CSS and Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -133,6 +144,8 @@
             color: var(--text-color);
             background-color: var(--bg-color);
             overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         .container {
@@ -681,6 +694,167 @@
                 width: 100%;
                 max-width: 350px;
             }
+            
+            /* Improved touch targets */
+            .download-button,
+            .setting-item,
+            .feature h3,
+            .social-links a,
+            .mobile-nav-toggle,
+            .mobile-menu-links a,
+            .view-full-changelog,
+            .changelog-modal-close,
+            .download-popup-close {
+                min-height: 44px;
+                min-width: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .download-button {
+                padding: 1rem 1.5rem;
+            }
+            
+            .social-links a {
+                padding: 0.5rem;
+            }
+            
+            /* Fix button display */
+            .download-button i {
+                margin-right: 0.5rem;
+            }
+            
+            /* Adjust line heights for better readability on mobile */
+            p, li, .feature p, .setting-description {
+                line-height: 1.5;
+            }
+            
+            /* Adjust font sizes for better readability */
+            .app-description {
+                font-size: 1.2rem;
+            }
+            
+            /* Adjust screenshots for mobile */
+            .screenshots {
+                gap: 1rem;
+            }
+            
+            .screenshot {
+                flex: 0 1 100%;
+                max-width: 300px;
+            }
+            
+            /* Add overscroll behavior for smoother mobile scrolling */
+            body {
+                overscroll-behavior: contain;
+            }
+            
+            /* Add tap highlight color */
+            a, button {
+                -webkit-tap-highlight-color: rgba(180, 150, 255, 0.2);
+            }
+            
+            /* Improve form accessibility */
+            input, button, textarea, select {
+                font-size: 16px; /* Prevents iOS zoom on focus */
+            }
+            
+            /* Fix changelog popup on mobile */
+            .changelog-modal {
+                width: 85%;
+                max-height: 75vh;
+                padding: 1.5rem;
+            }
+            
+            /* Fix download popup on mobile */
+            .download-popup {
+                width: 85%;
+                padding: 1.5rem;
+            }
+        }
+        
+        /* Add enhanced mobile styles */
+        @media (max-width: 576px) {
+            .container {
+                width: 95%;
+                padding: 1rem;
+            }
+            
+            header {
+                padding: 2rem 0 4rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .app-description {
+                font-size: 1.2rem;
+            }
+            
+            .speedometer-circle {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .stats-panels {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            .stat-value {
+                font-size: 1.2rem;
+            }
+            
+            .download-title {
+                font-size: 1.8rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .settings-showcase {
+                padding: 1.5rem;
+            }
+            
+            .settings-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .setting-item {
+                padding: 0.75rem;
+            }
+            
+            .app-showcase {
+                gap: 2rem;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 375px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .speedometer-circle {
+                width: 220px;
+                height: 220px;
+            }
+            
+            .speed-value {
+                font-size: 3.5rem;
+            }
+            
+            .download-card {
+                padding: 1.5rem;
+            }
+            
+            .changelog-container {
+                max-height: 120px;
+            }
         }
         
         /* Animations for elements when they come into view */
@@ -853,6 +1027,196 @@
                 opacity: 0;
             }
         }
+
+        /* Changelog styles */
+        .changelog-container {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            margin: 15px 0;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--main-color);
+        }
+        
+        .changelog-title {
+            font-weight: 600;
+            color: var(--main-color);
+            margin-bottom: 8px;
+        }
+        
+        .changelog-content {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+        
+        .changelog-content ul {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .view-full-changelog {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: var(--main-color);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .view-full-changelog:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+        
+        /* Changelog modal */
+        .changelog-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: linear-gradient(135deg, #222222, #1a1a1a);
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(180, 150, 255, 0.1);
+        }
+        
+        .changelog-modal.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .changelog-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+        }
+        
+        .changelog-modal-title {
+            font-size: 1.4rem;
+            color: var(--main-color);
+        }
+        
+        .changelog-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .changelog-modal-close:hover {
+            color: var(--main-color);
+        }
+        
+        .changelog-modal-content {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, var(--main-color), var(--accent-color));
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.2rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            z-index: 90;
+        }
+        
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            .back-to-top {
+                width: 45px;
+                height: 45px;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+
+        /* Fix for 100vh on mobile */
+        .full-height {
+            height: 100vh; /* Fallback */
+            height: calc(var(--vh, 1vh) * 100);
+        }
+        
+        /* Landscape orientation fixes */
+        @media (max-width: 850px) and (orientation: landscape) {
+            .speedometer-circle {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .speed-value {
+                font-size: 3rem;
+            }
+            
+            .stats-panels {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.5rem;
+                max-width: 90%;
+            }
+            
+            .app-showcase {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+            
+            .download-buttons {
+                flex-direction: row;
+            }
+            
+            header {
+                padding: 2rem 0 3rem;
+            }
+            
+            .mobile-menu {
+                max-height: 80vh;
+            }
+        }
+        
+        /* Fix text selection and user-select for mobile */
+        p, h1, h2, h3, li, .changelog-content {
+            -webkit-user-select: text;
+            user-select: text;
+        }
     </style>
 </head>
 <body>
@@ -877,7 +1241,7 @@
     </header>
 
     <div class="container">
-        <div class="app-showcase">
+        <div class="app-showcase" id="features">
             <div class="speedometer-preview animate-on-scroll">
                 <div class="speedometer-circle">
                     <div class="speed-value">0.0</div>
@@ -935,7 +1299,7 @@
             </div>
         </div>
 
-        <div class="settings-showcase animate-on-scroll">
+        <div class="settings-showcase animate-on-scroll" id="settings">
             <h2 style="color: var(--main-color); text-align: center;">Highly Customizable Settings</h2>
             <p style="text-align: center; margin-bottom: 2rem;">Adjust DashTime to suit your needs with comprehensive configuration options</p>
             
@@ -971,14 +1335,19 @@
             </div>
         </div>
 
-        <div class="download-section animate-on-scroll">
+        <div class="download-section animate-on-scroll" id="download">
             <div class="download-title">
                 Download DashTime
             </div>
             <div class="download-buttons">
                 <div class="download-card">
                     <h3>Stable Version</h3>
-                    <div class="version-info">Version 1.0.0 - Recommended for most users</div>
+                    <div class="version-info" id="stable-version-info">Version 1.0.0 - Recommended for most users</div>
+                    <div class="changelog-container">
+                        <div class="changelog-title">Latest Changes:</div>
+                        <div class="changelog-content" id="stable-changelog">Loading changelog...</div>
+                        <a href="#" class="view-full-changelog" id="stable-full-changelog">View full changelog</a>
+                    </div>
                     <a href="#" id="stable-download-link" class="download-button">
                         <i class="fas fa-download"></i><span id="stable-button-text">Download Stable</span>
                     </a>
@@ -988,7 +1357,12 @@
                 </div>
                 <div class="download-card">
                     <h3>Beta Version</h3>
-                    <div class="version-info">Latest features and improvements. May contain occasional bugs.</div>
+                    <div class="version-info" id="beta-version-info">Latest features and improvements. May contain occasional bugs.</div>
+                    <div class="changelog-container">
+                        <div class="changelog-title">Latest Changes:</div>
+                        <div class="changelog-content" id="beta-changelog">Loading changelog...</div>
+                        <a href="#" class="view-full-changelog" id="beta-full-changelog">View full changelog</a>
+                    </div>
                     <a href="#" id="beta-download-link" class="download-button">
                         <i class="fas fa-flask"></i><span id="beta-button-text">Download Beta</span>
                     </a>
@@ -1010,6 +1384,11 @@
         </div>
     </footer>
 
+    <!-- Back to top button -->
+    <a href="#" class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+
     <!-- Download popup -->
     <div class="download-popup-bg" id="downloadPopupBg"></div>
     <div class="download-popup" id="downloadPopup">
@@ -1022,6 +1401,21 @@
     </div>
 
     <script>
+        // Fix for mobile viewport height 
+        function setMobileHeight() {
+            // First we get the viewport height and multiply it by 1% to get a value for a vh unit
+            let vh = window.innerHeight * 0.01;
+            // Then we set the value in the --vh custom property to the root of the document
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        // Set the height initially
+        setMobileHeight();
+
+        // Reset on resize and orientation change
+        window.addEventListener('resize', setMobileHeight);
+        window.addEventListener('orientationchange', setMobileHeight);
+        
         // Preloader animation
         window.addEventListener('load', function() {
             // Simulate loading delay (remove in production if not needed)
@@ -1102,11 +1496,74 @@
             const betaLink = document.getElementById('beta-download-link');
             const betaButtonText = document.getElementById('beta-button-text');
             const betaLoading = document.getElementById('beta-loading');
+            const betaVersionInfo = document.getElementById('beta-version-info');
+            const betaChangelog = document.getElementById('beta-changelog');
+            const betaFullChangelog = document.getElementById('beta-full-changelog');
 
             // Stable download elements
             const stableLink = document.getElementById('stable-download-link');
             const stableButtonText = document.getElementById('stable-button-text');
             const stableLoading = document.getElementById('stable-loading');
+            const stableVersionInfo = document.getElementById('stable-version-info');
+            const stableChangelog = document.getElementById('stable-changelog');
+            const stableFullChangelog = document.getElementById('stable-full-changelog');
+
+            // Changelog modal elements
+            let changelogModal = document.createElement('div');
+            changelogModal.className = 'changelog-modal';
+            changelogModal.innerHTML = `
+                <div class="changelog-modal-header">
+                    <div class="changelog-modal-title">Changelog</div>
+                    <button class="changelog-modal-close">&times;</button>
+                </div>
+                <div class="changelog-modal-content"></div>
+            `;
+            document.body.appendChild(changelogModal);
+            
+            const changelogModalContent = changelogModal.querySelector('.changelog-modal-content');
+            const changelogModalTitle = changelogModal.querySelector('.changelog-modal-title');
+            const changelogModalClose = changelogModal.querySelector('.changelog-modal-close');
+            
+            // Background overlay for modal
+            let modalOverlay = document.createElement('div');
+            modalOverlay.className = 'download-popup-bg';
+            document.body.appendChild(modalOverlay);
+            
+            // Close modal on click
+            changelogModalClose.addEventListener('click', closeChangelogModal);
+            modalOverlay.addEventListener('click', closeChangelogModal);
+            
+            function closeChangelogModal() {
+                changelogModal.classList.remove('show');
+                modalOverlay.classList.remove('show');
+            }
+            
+            // Show changelog modal
+            function showChangelogModal(title, content) {
+                changelogModalTitle.textContent = title;
+                changelogModalContent.innerHTML = content;
+                modalOverlay.classList.add('show');
+                changelogModal.classList.add('show');
+            }
+            
+            // Set up full changelog view
+            betaFullChangelog.addEventListener('click', function(e) {
+                e.preventDefault();
+                const storedChangelog = localStorage.getItem('betaFullChangelog');
+                const title = localStorage.getItem('betaVersion') || 'Beta Version';
+                if (storedChangelog) {
+                    showChangelogModal(title, storedChangelog);
+                }
+            });
+            
+            stableFullChangelog.addEventListener('click', function(e) {
+                e.preventDefault();
+                const storedChangelog = localStorage.getItem('stableFullChangelog');
+                const title = localStorage.getItem('stableVersion') || 'Stable Version';
+                if (storedChangelog) {
+                    showChangelogModal(title, storedChangelog);
+                }
+            });
 
             // Set up beta download
             betaLink.addEventListener('click', function(e) {
@@ -1128,6 +1585,47 @@
                 }
             });
 
+            // Parse markdown-like release notes to HTML
+            function parseReleaseNotes(notes) {
+                if (!notes) return "No changelog available";
+                
+                // Handle basic markdown formatting
+                let html = notes
+                    // Convert headers
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    // Convert bold and italic
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    // Convert lists
+                    .replace(/^- (.*$)/gim, '<li>$1</li>')
+                    // Handle emoji
+                    .replace(/:(.*?):/g, '');
+                
+                // Wrap lists
+                html = html.replace(/<li>(.*?)<\/li>/g, function(match) {
+                    if (html.indexOf('<ul>') === -1) {
+                        return '<ul>' + match + '</ul>';
+                    }
+                    return match;
+                });
+                
+                return html;
+            }
+            
+            // Extract summary from full changelog (first few points)
+            function getChangelogSummary(fullChangelog) {
+                // Find all list items
+                const matches = fullChangelog.match(/<li>(.*?)<\/li>/g);
+                if (!matches) return fullChangelog;
+                
+                // Take first 3 list items
+                const summary = matches.slice(0, 3).join('');
+                return `<ul>${summary}</ul>
+                <span style="color: var(--text-secondary); font-style: italic;">...and more</span>`;
+            }
+
             // Function to fetch latest release
             function fetchLatestRelease(isBeta) {
                 fetch('https://api.github.com/repos/CRZX1337/DashTime/releases')
@@ -1137,6 +1635,8 @@
                         const link = isBeta ? betaLink : stableLink;
                         const buttonText = isBeta ? betaButtonText : stableButtonText;
                         const loading = isBeta ? betaLoading : stableLoading;
+                        const versionInfo = isBeta ? betaVersionInfo : stableVersionInfo;
+                        const changelog = isBeta ? betaChangelog : stableChangelog;
                         const apkName = isBeta ? 'app-debug.apk' : 'app-release.apk';
                         
                         // Filter releases
@@ -1147,6 +1647,24 @@
                         if (filteredReleases.length > 0) {
                             // Get the latest release of the specified type
                             const latestRelease = filteredReleases[0];
+                            const publishDate = new Date(latestRelease.published_at);
+                            const formattedDate = publishDate.toLocaleDateString(undefined, { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                            
+                            // Set version info
+                            const versionTitle = latestRelease.name || latestRelease.tag_name;
+                            versionInfo.textContent = `${versionTitle} - Released ${formattedDate}`;
+                            
+                            // Store version for modal
+                            localStorage.setItem(isBeta ? 'betaVersion' : 'stableVersion', versionTitle);
+                            
+                            // Parse and display changelog
+                            const parsedChangelog = parseReleaseNotes(latestRelease.body);
+                            localStorage.setItem(isBeta ? 'betaFullChangelog' : 'stableFullChangelog', parsedChangelog);
+                            changelog.innerHTML = getChangelogSummary(parsedChangelog);
                             
                             // Find the APK asset
                             const apkAsset = latestRelease.assets.find(asset => 
@@ -1166,15 +1684,18 @@
                             buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
                             loading.textContent = isBeta ? 'No pre-releases found' : 'No stable releases found';
                             loading.style.display = 'block';
+                            changelog.textContent = 'No changelog available';
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching releases:', error);
                         const buttonText = isBeta ? betaButtonText : stableButtonText;
                         const loading = isBeta ? betaLoading : stableLoading;
+                        const changelog = isBeta ? betaChangelog : stableChangelog;
                         buttonText.textContent = isBeta ? 'Download Beta' : 'Download Stable';
                         loading.textContent = 'Error loading latest release';
                         loading.style.display = 'block';
+                        changelog.textContent = 'Failed to load changelog';
                     });
             }
 
@@ -1274,6 +1795,29 @@
             if (downloadPopupBg) {
                 downloadPopupBg.addEventListener('click', closeDownloadPopup);
             }
+        });
+
+        // Back to top button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const backToTopButton = document.getElementById('backToTop');
+            
+            // Show/hide back to top button
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.classList.add('visible');
+                } else {
+                    backToTopButton.classList.remove('visible');
+                }
+            });
+            
+            // Smooth scroll to top
+            backToTopButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
         });
     </script>
 </body>
