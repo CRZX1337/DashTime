@@ -2,6 +2,21 @@ name: Build Debug APK
 
 on:
   workflow_dispatch:  # Only manual triggering
+    inputs:
+      release_title:
+        description: 'Custom release title (optional)'
+        required: false
+        type: string
+      changelog:
+        description: 'Release changelog (optional)'
+        required: false
+        type: string
+        default: 'Automated debug build from GitHub Actions'
+      is_latest:
+        description: 'Mark as latest beta release'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write  # Required to create releases
@@ -52,12 +67,41 @@ jobs:
           name: app-debug
           path: build/app/outputs/flutter-apk/app-debug.apk
 
-      - name: Create Release
+      - name: Set release title
+        id: release_title
+        run: |
+          if [ "${{ github.event.inputs.release_title }}" != "" ]; then
+            echo "title=${{ github.event.inputs.release_title }}" >> $GITHUB_OUTPUT
+          else
+            echo "title=Debug Build ${{ github.run_number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Regular Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: debug-build-${{ github.run_number }}
-          name: Debug Build ${{ github.run_number }}
-          body: "Automated debug build from GitHub Actions"
+          name: ${{ steps.release_title.outputs.title }}
+          body: ${{ github.event.inputs.changelog }}
+          draft: false
+          prerelease: true
+          files: build/app/outputs/flutter-apk/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create/Update Latest Debug Release
+        if: ${{ github.event.inputs.is_latest == 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: debug-build-latest
+          name: Latest Debug Build
+          body: |
+            This is always the latest debug build of DashTime.
+
+            **Release Notes:**
+            ${{ github.event.inputs.changelog }}
+
+            **Build Number:** ${{ github.run_number }}
+            **Build Date:** ${{ format(github.event.repository.updated_at, 'MMMM DD, YYYY') }}
           draft: false
           prerelease: true
           files: build/app/outputs/flutter-apk/app-debug.apk

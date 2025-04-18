@@ -3,60 +3,542 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DashTime</title>
+    <title>DashTime - GPS Speedometer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
+        :root {
+            --bg-color: #474747;
+            --main-color: #b496ff;
+            --accent-color: #ff529a;
+            --text-color: #ffffff;
+            --text-secondary: #e0e0e0;
+            --card-bg: #555555;
+            --transition-speed: 0.3s;
+            --orange-accent: #ff9100;
+            --green-accent: #28ca72;
+            --blue-accent: #1e90ff;
+            --purple-accent: #b035e0;
+        }
+        
+        * {
             margin: 0;
             padding: 0;
-            color: #333;
-            background-color: #f5f5f5;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            overflow-x: hidden;
+        }
+        
         .container {
-            width: 80%;
+            width: 85%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
+        
         header {
-            background-color: #4285F4;
-            color: white;
+            background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+            position: relative;
             text-align: center;
-            padding: 3rem 0;
-            margin-bottom: 2rem;
+            padding: 5rem 0 7rem;
+            margin-bottom: 5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
         }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZGVmcz4KPHBhdHRlcm4gaWQ9InBhdHRlcm4iIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwLDQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj4KPHJlY3QgaWQ9InBhdHRlcm4tYmFja2dyb3VuZCIgd2lkdGg9IjQwMCUiIGhlaWdodD0iNDAwJSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIj48L3JlY3Q+CjxjaXJjbGUgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgY3g9IjIwIiBjeT0iMjAiIHI9IjEiPjwvY2lyY2xlPgo8L3BhdHRlcm4+CjwvZGVmcz4KPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSI+PC9yZWN0Pgo8L3N2Zz4=');
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
         h1 {
-            font-size: 3rem;
+            font-size: 4rem;
+            font-weight: 700;
             margin: 0;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(0);
+            animation: float 6s ease-in-out infinite;
         }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
         .app-description {
             font-size: 1.5rem;
             margin-top: 1rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards 0.5s;
         }
-        .coming-soon {
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .screenshots {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .screenshot {
+            flex: 0 1 300px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .screenshot:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .screenshot img {
+            width: 100%;
+            display: block;
+        }
+        
+        .app-showcase {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 3rem;
+            margin: 5rem 0;
+            position: relative;
+        }
+        
+        .speedometer-preview {
+            flex: 0 1 400px;
+            position: relative;
+        }
+        
+        .speedometer-circle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background-color: #1a1a1a;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .speedometer-circle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #333;
+            box-sizing: border-box;
+        }
+        
+        .speedometer-circle::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background-color: #28ca72;
+            border-radius: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .speed-value {
+            font-size: 4rem;
+            font-weight: 700;
+        }
+        
+        .speed-unit {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-top: -15px;
+        }
+        
+        .stats-panels {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+        
+        .stat-panel {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .max-speed {
+            border-left: 3px solid var(--orange-accent);
+        }
+        
+        .avg-speed {
+            border-left: 3px solid var(--green-accent);
+        }
+        
+        .distance {
+            border-left: 3px solid var(--blue-accent);
+        }
+        
+        .time {
+            border-left: 3px solid var(--purple-accent);
+        }
+        
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .stat-unit {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .app-features {
+            flex: 0 1 500px;
+        }
+        
+        .download-section {
             text-align: center;
-            font-size: 1.8rem;
-            margin: 4rem 0;
-            color: #4285F4;
+            margin: 4rem 0 6rem;
+            position: relative;
         }
+        
+        .download-section::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 200px;
+            background-color: var(--main-color);
+            opacity: 0.1;
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
+        }
+        
+        .download-title {
+            font-size: 2.2rem;
+            color: var(--main-color);
+            margin-bottom: 2.5rem;
+            position: relative;
+            display: inline-block;
+            font-weight: 600;
+        }
+        
+        .download-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 30%;
+            width: 40%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--main-color), var(--accent-color));
+            border-radius: 3px;
+        }
+        
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .download-card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            width: 280px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .download-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--main-color), var(--accent-color));
+        }
+        
+        .download-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .download-card h3 {
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        
+        .version-info {
+            font-size: 0.9rem;
+            margin: 1rem 0 1.5rem;
+            color: var(--text-secondary);
+            min-height: 40px;
+        }
+        
+        .download-button {
+            display: inline-block;
+            background: linear-gradient(45deg, var(--main-color), var(--accent-color));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(180, 150, 255, 0.4);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed), background var(--transition-speed);
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+        
+        .download-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--accent-color), var(--main-color));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+            border-radius: 50px;
+        }
+        
+        .download-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(180, 150, 255, 0.6);
+        }
+        
+        .download-button:hover::before {
+            opacity: 1;
+        }
+        
+        .download-button i {
+            margin-right: 8px;
+        }
+        
         .features {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 3rem 0;
+            gap: 2.5rem;
+            margin: 4rem 0;
         }
+        
         .feature {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            position: relative;
+            overflow: hidden;
         }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--main-color), var(--accent-color));
+        }
+        
+        .feature h3 {
+            color: var(--main-color);
+            margin-bottom: 1rem;
+            position: relative;
+            padding-left: 35px;
+        }
+        
+        .feature h3 i {
+            position: absolute;
+            left: 0;
+            top: 5px;
+        }
+        
+        .feature p {
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+        
+        .settings-showcase {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem 0;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .settings-list {
+            margin: 2rem 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .setting-item {
+            background-color: #1a1a1a;
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .setting-item-left {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .setting-name {
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+        }
+        
+        .setting-description {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .setting-value {
+            background-color: rgba(180, 150, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: var(--main-color);
+            min-width: 80px;
+            text-align: center;
+        }
+        
         footer {
             text-align: center;
-            padding: 2rem 0;
-            color: #666;
+            padding: 3rem 0;
+            color: var(--text-secondary);
             font-size: 0.9rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            position: relative;
+            margin-top: 3rem;
+        }
+        
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--main-color), transparent);
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .social-links a {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            transition: color var(--transition-speed), transform var(--transition-speed);
+        }
+        
+        .social-links a:hover {
+            color: var(--main-color);
+            transform: translateY(-3px);
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 3rem 0 5rem;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .download-buttons {
+                gap: 2rem;
+            }
+            
+            .download-card {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+        
+        /* Animations for elements when they come into view */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -64,35 +546,160 @@
     <header>
         <div class="container">
             <h1>DashTime</h1>
-            <div class="app-description">A modern time management application</div>
+            <div class="app-description">Advanced GPS Speedometer & Speed Tracker</div>
         </div>
     </header>
 
     <div class="container">
-        <div class="coming-soon">
-            Coming Soon to App Stores
+        <div class="app-showcase">
+            <div class="speedometer-preview animate-on-scroll">
+                <div class="speedometer-circle">
+                    <div class="speed-value">0.0</div>
+                    <div class="speed-unit">km/h</div>
+                </div>
+                
+                <div class="stats-panels">
+                    <div class="stat-panel max-speed">
+                        <div class="stat-title">MAX SPEED</div>
+                        <div class="stat-value">0.0 <span class="stat-unit">km/h</span></div>
+                    </div>
+                    <div class="stat-panel avg-speed">
+                        <div class="stat-title">AVG SPEED</div>
+                        <div class="stat-value">0.0 <span class="stat-unit">km/h</span></div>
+                    </div>
+                    <div class="stat-panel distance">
+                        <div class="stat-title">DISTANCE</div>
+                        <div class="stat-value">0 <span class="stat-unit">m</span></div>
+                    </div>
+                    <div class="stat-panel time">
+                        <div class="stat-title">TIME</div>
+                        <div class="stat-value">00:00 <span class="stat-unit">min</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="app-features animate-on-scroll">
+                <h2 style="color: var(--main-color); margin-bottom: 1.5rem;">DashTime Features</h2>
+                <ul style="list-style: none;">
+                    <li style="margin-bottom: 1rem;">
+                        <i class="fas fa-tachometer-alt" style="color: var(--main-color); margin-right: 10px;"></i>
+                        <strong>High-precision GPS speedometer</strong> with real-time updates
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <i class="fas fa-route" style="color: var(--main-color); margin-right: 10px;"></i>
+                        <strong>Trip tracking and recording</strong> for later analysis
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <i class="fas fa-stopwatch" style="color: var(--main-color); margin-right: 10px;"></i>
+                        Monitors <strong>maximum speed, average speed, distance, and time</strong>
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <i class="fas fa-sliders-h" style="color: var(--main-color); margin-right: 10px;"></i>
+                        <strong>Customizable units</strong> (km/h, mph, m/km)
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <i class="fas fa-signal" style="color: var(--main-color); margin-right: 10px;"></i>
+                        <strong>GPS signal monitoring</strong> for accurate readings
+                    </li>
+                    <li style="margin-bottom: 1rem;">
+                        <i class="fas fa-mobile-alt" style="color: var(--main-color); margin-right: 10px;"></i>
+                        <strong>Keep screen on</strong> feature for uninterrupted use
+                    </li>
+                </ul>
+            </div>
         </div>
 
-        <div class="features">
-            <div class="feature">
-                <h3>Intuitive Interface</h3>
-                <p>Seamlessly manage your time with our user-friendly interface, designed for maximum productivity.</p>
+        <div class="settings-showcase animate-on-scroll">
+            <h2 style="color: var(--main-color); text-align: center;">Highly Customizable Settings</h2>
+            <p style="text-align: center; margin-bottom: 2rem;">Adjust DashTime to suit your needs with comprehensive configuration options</p>
+            
+            <div class="settings-list">
+                <div class="setting-item">
+                    <div class="setting-item-left">
+                        <div class="setting-name">Speed Unit</div>
+                        <div class="setting-description">Choose your preferred speed unit</div>
+                    </div>
+                    <div class="setting-value">km/h</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-item-left">
+                        <div class="setting-name">Maximum Speedometer</div>
+                        <div class="setting-description">Set maximum displayed speed</div>
+                    </div>
+                    <div class="setting-value">180</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-item-left">
+                        <div class="setting-name">Distance Unit</div>
+                        <div class="setting-description">Choose your preferred distance unit</div>
+                    </div>
+                    <div class="setting-value">km</div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-item-left">
+                        <div class="setting-name">Keep Screen On</div>
+                        <div class="setting-description">Prevent screen from turning off</div>
+                    </div>
+                    <div class="setting-value" style="background-color: var(--main-color); color: white;">ON</div>
+                </div>
             </div>
-            <div class="feature">
-                <h3>Cross-Platform</h3>
-                <p>Access your time management data on any device with our cross-platform compatibility.</p>
+        </div>
+
+        <div class="download-section animate-on-scroll">
+            <div class="download-title">
+                Download DashTime
             </div>
-            <div class="feature">
-                <h3>Productivity Insights</h3>
-                <p>Gain valuable insights into your time usage with detailed analytics and reports.</p>
+            <div class="download-buttons">
+                <div class="download-card">
+                    <h3>Stable Version</h3>
+                    <div class="version-info">Version 1.0.0 - Recommended for most users</div>
+                    <a href="https://github.com/CRZX1337/DashTime/releases/latest/download/app-release.apk" class="download-button">
+                        <i class="fas fa-download"></i>Download Stable
+                    </a>
+                </div>
+                <div class="download-card">
+                    <h3>Beta Version</h3>
+                    <div class="version-info">Latest features and improvements. May contain occasional bugs.</div>
+                    <a href="https://github.com/CRZX1337/DashTime/releases/download/debug-build-latest/app-debug.apk" class="download-button">
+                        <i class="fas fa-flask"></i>Download Beta
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <footer>
         <div class="container">
-            <p>&copy; 2023 DashTime. All rights reserved.</p>
+            <div class="social-links">
+                <a href="https://github.com/CRZX1337/DashTime" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+                <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+            <p>&copy; 2025 DashTime. All rights reserved.</p>
+            <p style="margin-top: 0.5rem;">Developed by CryZuX</p>
         </div>
     </footer>
+
+    <script>
+        // Animations for scroll effects
+        const animateElements = document.querySelectorAll('.animate-on-scroll');
+        
+        const observerOptions = {
+            threshold: 0.15
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+        
+        animateElements.forEach(element => {
+            observer.observe(element);
+        });
+    </script>
 </body>
 </html> 
