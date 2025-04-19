@@ -467,8 +467,12 @@ class _AccelerationScreenState extends State<AccelerationScreen>
     
     // Get screen size for responsive layout
     final screenSize = MediaQuery.of(context).size;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    
     // Calculate appropriate speedometer size
-    final speedometerSize = min(240.0, screenSize.width * 0.7);
+    final speedometerSize = isLandscape
+        ? min(240.0, screenSize.height * 0.5)
+        : min(240.0, screenSize.width * 0.7).clamp(180.0, 300.0);
     
     return Scaffold(
       body: SafeArea(

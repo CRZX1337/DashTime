@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../config/theme.dart';
+import '../config/responsive_util.dart';
 
 class StatsCard extends StatelessWidget {
   final String title;
@@ -24,19 +25,65 @@ class StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size for responsive design
-    final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 360;
+    // Use responsive utilities to determine sizing based on screen type
+    final deviceType = ResponsiveUtil.getDeviceType(context);
+    final isLandscape = ResponsiveUtil.isLandscape(context);
     
-    // Adjust font sizes based on screen width
-    final titleFontSize = isSmallScreen ? 11.0 : 13.0;
-    final valueFontSize = isSmallScreen ? 18.0 : 20.0;
-    final unitFontSize = isSmallScreen ? 11.0 : 12.0;
-    final iconSize = isSmallScreen ? 18.0 : 22.0;
+    // Adjust font sizes based on device type and orientation
+    final titleFontSize = ResponsiveUtil.value<double>(
+      context: context,
+      small: 11.0,
+      medium: 12.0,
+      large: 13.0,
+      tablet: 15.0,
+      desktop: 16.0,
+    );
     
-    // Adjust padding based on screen size
-    final horizontalPadding = isSmallScreen ? 6.0 : 10.0;
-    final verticalPadding = isSmallScreen ? 4.0 : 6.0;
+    final valueFontSize = ResponsiveUtil.value<double>(
+      context: context,
+      small: 18.0,
+      medium: 20.0,
+      large: 22.0,
+      tablet: 24.0,
+      desktop: 28.0,
+    );
+    
+    final unitFontSize = ResponsiveUtil.value<double>(
+      context: context,
+      small: 11.0,
+      medium: 12.0,
+      large: 13.0,
+      tablet: 15.0,
+      desktop: 16.0,
+    );
+    
+    final iconSize = ResponsiveUtil.value<double>(
+      context: context,
+      small: 18.0,
+      medium: 20.0,
+      large: 22.0,
+      tablet: 24.0,
+      desktop: 28.0,
+    );
+    
+    // Adjust padding based on screen size and orientation
+    final horizontalPadding = ResponsiveUtil.value<double>(
+      context: context,
+      small: 6.0,
+      medium: 8.0,
+      large: 10.0,
+      tablet: 12.0,
+      desktop: 14.0,
+    );
+    
+    final verticalPadding = ResponsiveUtil.value<double>(
+      context: context,
+      small: 4.0,
+      medium: 6.0,
+      large: 8.0,
+      tablet: 10.0,
+      desktop: 12.0,
+    );
     
     return Card(
       elevation: elevation,
@@ -94,7 +141,7 @@ class StatsCard extends StatelessWidget {
                   ],
                 ),
                 
-                SizedBox(height: isSmallScreen ? 1 : 2),
+                SizedBox(height: deviceType == DeviceScreenType.phoneSmall ? 1 : 2),
                 
                 // Value and unit row with better overflow handling
                 Row(
@@ -143,8 +190,15 @@ class StatsCard extends StatelessWidget {
                 
                 // Decorative bar at bottom
                 Container(
-                  height: 2,
-                  width: 30,
+                  height: deviceType == DeviceScreenType.phoneSmall ? 1 : 2,
+                  width: ResponsiveUtil.value<double>(
+                    context: context,
+                    small: 25,
+                    medium: 30,
+                    large: 35,
+                    tablet: 40,
+                    desktop: 50,
+                  ),
                   margin: const EdgeInsets.only(top: 1),
                   decoration: BoxDecoration(
                     color: color,

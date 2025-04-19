@@ -34,12 +34,6 @@ void main() async {
     WakelockPlus.toggle(enable: settingsService.settings.keepScreenOn);
   });
   
-  // Set preferred orientations
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-  
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -102,6 +96,21 @@ class _MyAppState extends State<MyApp> {
               ? OnboardingScreen(onComplete: _onOnboardingComplete)
               : const MainNavigator())
           : const LoadingScreen(),
+      builder: (context, child) {
+        // Add responsive sizing and orientation support
+        final mediaQuery = MediaQuery.of(context);
+        
+        // Apply text scaling factor limit for consistency
+        final constrainedTextScaleFactor = 
+            mediaQuery.textScaleFactor.clamp(0.8, 1.3);
+        
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaleFactor: constrainedTextScaleFactor,
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

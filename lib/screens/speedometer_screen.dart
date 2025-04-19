@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +13,8 @@ import '../models/app_settings.dart';
 import '../widgets/speedometer.dart';
 import '../widgets/stats_card.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 class SpeedometerScreen extends StatefulWidget {
   const SpeedometerScreen({super.key});
@@ -307,578 +310,400 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // App bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => Navigator.of(context).pop(),
-                    color: AppTheme.primaryColor,
-                  ).animate().fadeIn().scale(
-                    delay: 200.milliseconds,
-                    duration: 200.milliseconds,
-                  ),
-                ],
-              ),
-            ),
-
-            // Trip saving notification (shown after stopping a trip)
-            if (!_isTracking && (_hasUnsavedTrip || _isExiting))
-              AnimatedBuilder(
-                    animation: _containerExitController,
-                    builder: (context, child) {
-                      // Calculate opacity based on exit animation with faster fade out
-                      final opacity =
-                          _isExiting
-                              ? 1.0 -
-                                  Curves.easeOut.transform(
-                                    _containerExitController.value,
-                                  )
-                              : 1.0;
-
-                      // Calculate scale based on exit animation with slight bounce
-                      final scale =
-                          _isExiting
-                              ? 1.0 -
-                                  (Curves.easeInQuad.transform(
-                                        _containerExitController.value,
-                                      ) *
-                                      0.15)
-                              : 1.0;
-
-                      // Calculate Y offset for sliding up during exit with easing
-                      final yOffset =
-                          _isExiting
-                              ? -Curves.easeOutQuint.transform(
-                                    _containerExitController.value,
-                                  ) *
-                                  60.0
-                              : 0.0;
-
-                      return Opacity(
-                        opacity: opacity,
-                        child: Transform.translate(
-                          offset: Offset(0, yOffset),
-                          child: Transform.scale(
-                            scale: scale,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 8,
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppTheme.cardDark,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(
-                                      0.1,
-                                    ), // TODO: Replace with .withAlpha() in future update
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                children: [
-                                  const Text(
-                                    'Your trip has been recorded. Do you want to save it?',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: AppTheme.textSecondaryDark,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ).animate().fadeIn(delay: 300.milliseconds),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      // Save button with enhanced animation
-                                      AnimatedBuilder(
-                                            animation: _saveButtonController,
-                                            builder: (context, child) {
-                                              return Transform.scale(
-                                                scale:
-                                                    _isSaving
-                                                        ? Curves.easeInBack
-                                                                .transform(
-                                                                  _saveButtonController
-                                                                      .value,
-                                                                ) *
-                                                            0.8
-                                                        : 1.0,
-                                                child: ElevatedButton.icon(
-                                                  onPressed:
-                                                      _isSaving || _isDiscarding
-                                                          ? null
-                                                          : () =>
-                                                              _handleSaveTrip(),
-                                                  icon:
-                                                      _isSaving
-                                                          ? const SizedBox(
-                                                            width: 20,
-                                                            height: 20,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                  strokeWidth:
-                                                                      2,
-                                                                ),
-                                                          )
-                                                          : const Icon(
-                                                            Icons.save,
-                                                          ),
-                                                  label: Text(
-                                                    _isSaving
-                                                        ? 'SAVING...'
-                                                        : 'SAVE TRIP',
-                                                  ),
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
-                                                        AppTheme.accentColor,
-                                                    foregroundColor:
-                                                        Colors.white,
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 24,
-                                                          vertical: 12,
-                                                        ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          )
-                                          .animate()
-                                          .fadeIn(delay: 500.milliseconds)
-                                          .slideX(
-                                            begin: -0.5,
-                                            end: 0,
-                                            curve: Curves.easeOutBack,
-                                          )
-                                          .scale(
-                                            begin: const Offset(0.8, 0.8),
-                                            end: const Offset(1.0, 1.0),
-                                            curve: Curves.elasticOut,
-                                          ),
-
-                                      const SizedBox(width: 12),
-
-                                      // Discard button with enhanced animation
-                                      AnimatedBuilder(
-                                            animation: _discardButtonController,
-                                            builder: (context, child) {
-                                              return Transform.scale(
-                                                scale:
-                                                    _isDiscarding
-                                                        ? Curves.easeInBack
-                                                                .transform(
-                                                                  _discardButtonController
-                                                                      .value,
-                                                                ) *
-                                                            0.8
-                                                        : 1.0,
-                                                child: OutlinedButton.icon(
-                                                  onPressed:
-                                                      _isSaving || _isDiscarding
-                                                          ? null
-                                                          : () =>
-                                                              _handleDiscardTrip(),
-                                                  icon: const Icon(
-                                                    Icons.delete,
-                                                  ),
-                                                  label: Text(
-                                                    _isDiscarding
-                                                        ? 'DISCARDING...'
-                                                        : 'DISCARD',
-                                                  ),
-                                                  style: OutlinedButton.styleFrom(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 24,
-                                                          vertical: 12,
-                                                        ),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          )
-                                          .animate()
-                                          .fadeIn(delay: 650.milliseconds)
-                                          .slideX(
-                                            begin: 0.5,
-                                            end: 0,
-                                            curve: Curves.easeOutBack,
-                                          )
-                                          .scale(
-                                            begin: const Offset(0.8, 0.8),
-                                            end: const Offset(1.0, 1.0),
-                                            curve: Curves.elasticOut,
-                                          ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                  .animate()
-                  .fadeIn(delay: 200.milliseconds)
-                  .slideY(begin: -0.3, end: 0, curve: Curves.easeOutQuint)
-                  .blurY(begin: 8, end: 0, curve: Curves.easeOut)
-                  .boxShadow(
-                    begin: BoxShadow(
-                      color: Colors.black.withOpacity(
-                        0.3,
-                      ), // TODO: Replace with .withAlpha() in future update
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                    ),
-                    end: BoxShadow(
-                      color: Colors.black.withOpacity(
-                        0.1,
-                      ), // TODO: Replace with .withAlpha() in future update
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ),
-
-            // Main content
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
+    final settings = Provider.of<SettingsService>(context).settings;
+    
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // App bar with back button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
                   children: [
-                    // Speedometer with adaptive sizing
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Calculate safe speedometer size based on screen dimensions
-                        final screenWidth = MediaQuery.of(context).size.width;
-                        final screenHeight = MediaQuery.of(context).size.height;
-                        final baseSize = screenWidth * 0.85;
-                        // Ensure the speedometer isn't too large for smaller height devices
-                        final safeSize = baseSize.clamp(200.0, screenHeight * 0.4);
-                        
-                        return Center(
-                          child: Speedometer(
-                            speed: _currentSpeed,
-                            maxSpeed: Provider.of<SettingsService>(context).settings.maxSpeedometer.toDouble(),
-                            size: safeSize,
-                            unit: Provider.of<SettingsService>(context).settings.speedUnit,
-                          ),
-                        ).animate().fadeIn().scale(
-                          delay: 300.milliseconds,
-                          duration: 500.milliseconds,
-                          curve: Curves.easeOutBack,
-                        );
-                      }
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // GPS status indicator - always visible
-                    Center(
+                    GestureDetector(
+                      onTap: _hasUnsavedTrip ? _showExitDialog : () => Navigator.pop(context),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: AppTheme.cardDark,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _isTracking && _locationService.currentPosition == null 
-                                    ? SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.orange,
-                                        ),
-                                      )
-                                    : Icon(
-                                        Icons.gps_fixed,
-                                        color:
-                                            _locationService.currentPosition != null
-                                                ? _getGpsAccuracyColor()
-                                                : Colors.grey,
-                                        size: 18,
-                                      ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'GPS Signal',
-                                      style: TextStyle(
-                                        color: AppTheme.textSecondaryDark,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Text(
-                                      _locationService.currentPosition != null
-                                          ? _getGpsAccuracyLevel()
-                                          : _isTracking 
-                                              ? 'Activating GPS...'
-                                              : 'Waiting for GPS...',
-                                      style: TextStyle(
-                                        color:
-                                            _locationService.currentPosition != null
-                                                ? AppTheme.textDark
-                                                : _isTracking
-                                                    ? Colors.orange
-                                                    : AppTheme.textSecondaryDark,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            
-                            // Show retry button if GPS is unavailable for some time while tracking
-                            if (_isTracking && _locationService.currentPosition == null)
-                              TextButton(
-                                onPressed: () async {
-                                  // Stop current tracking
-                                  _locationService.stopTracking();
-                                  // Restart tracking
-                                  await _locationService.startTracking();
-                                  // Update subscriptions
-                                  _speedSubscription?.cancel();
-                                  _speedSubscription = _locationService.speedStream.listen(_updateSpeed);
-                                },
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.refresh, size: 14),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Retry GPS',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: AppTheme.primaryColor,
+                          size: 20,
                         ),
                       ),
-                    ).animate().fadeIn(delay: 350.milliseconds),
-
-                    const SizedBox(height: 24),
-
-                    // Start/Stop tracking button
-                    Center(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        width: 180,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color:
-                              _isTracking ? Colors.red : AppTheme.primaryColor,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (_isTracking
-                                      ? Colors.red
-                                      : AppTheme.primaryColor)
-                                  .withOpacity(0.3),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _toggleTracking,
-                            borderRadius: BorderRadius.circular(28),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                AnimatedBuilder(
-                                  animation: _animationController,
-                                  builder: (context, child) {
-                                    return Icon(
-                                      _isTracking
-                                          ? Icons.stop
-                                          : Icons.play_arrow,
-                                      color: Colors.white,
-                                      size:
-                                          24 + (_animationController.value * 4),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _isTracking ? 'STOP' : 'START',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Speedometer',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textDark,
                         ),
                       ),
-                    ).animate().fadeIn().scale(
-                      delay: 400.milliseconds,
-                      duration: 200.milliseconds,
                     ),
-
-                    const SizedBox(height: 24),
-
-                    // Stats grid with adaptive layout - completely redesigned
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Calculate available width
-                        final availableWidth = constraints.maxWidth;
-                        
-                        // For extremely small screens, use a column layout
-                        if (availableWidth < 300) {
-                          return Column(
-                            children: [
-                              _buildStatsRow(
-                                context,
-                                'MAX SPEED',
-                                _maxSpeed.toStringAsFixed(1),
-                                Provider.of<SettingsService>(context).settings.speedUnit,
-                                Icons.speed,
-                                Colors.orange,
-                                500.milliseconds,
-                              ),
-                              const SizedBox(height: 8),
-                              _buildStatsRow(
-                                context,
-                                'AVG SPEED',
-                                _avgSpeed.toStringAsFixed(1),
-                                Provider.of<SettingsService>(context).settings.speedUnit,
-                                Icons.calculate,
-                                Colors.green,
-                                600.milliseconds,
-                              ),
-                              const SizedBox(height: 8),
-                              _buildStatsRow(
-                                context,
-                                'DISTANCE',
-                                _formatDistance(_distance),
-                                _getDistanceUnit(_distance),
-                                Icons.straighten,
-                                Colors.blue,
-                                700.milliseconds,
-                              ),
-                              const SizedBox(height: 8),
-                              _buildStatsRow(
-                                context,
-                                'TIME',
-                                _formattedTime,
-                                'min',
-                                Icons.timer,
-                                Colors.purple,
-                                800.milliseconds,
-                              ),
-                            ],
-                          );
-                        }
-                        
-                        // For other screens, use a grid but with adjusted parameters
-                        return Column(
-                          children: [
-                            // First row
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: StatsCard(
-                                    title: 'MAX SPEED',
-                                    value: _maxSpeed.toStringAsFixed(1),
-                                    unit: Provider.of<SettingsService>(context).settings.speedUnit,
-                                    icon: Icons.speed,
-                                    color: Colors.orange,
-                                  ).animate().fadeIn(delay: 500.milliseconds),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: StatsCard(
-                                    title: 'AVG SPEED',
-                                    value: _avgSpeed.toStringAsFixed(1),
-                                    unit: Provider.of<SettingsService>(context).settings.speedUnit,
-                                    icon: Icons.calculate,
-                                    color: Colors.green,
-                                  ).animate().fadeIn(delay: 600.milliseconds),
-                                ),
-                              ],
-                            ),
-                            
-                            const SizedBox(height: 12),
-                            
-                            // Second row
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: StatsCard(
-                                    title: 'DISTANCE',
-                                    value: _formatDistance(_distance),
-                                    unit: _getDistanceUnit(_distance),
-                                    icon: Icons.straighten,
-                                    color: Colors.blue,
-                                  ).animate().fadeIn(delay: 700.milliseconds),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: StatsCard(
-                                    title: 'TIME',
-                                    value: _formattedTime,
-                                    unit: 'min',
-                                    icon: Icons.timer,
-                                    color: Colors.purple,
-                                  ).animate().fadeIn(delay: 800.milliseconds),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      }
-                    ),
-
-                    // Bottom padding for scrolling
-                    SizedBox(height: MediaQuery.of(context).padding.bottom + 30),
                   ],
                 ),
               ),
-            ),
-          ],
+              
+              // Main content
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Check if we're in a very small screen (either height or width limited)
+                    final isCompactScreen = constraints.maxHeight < 550 || constraints.maxWidth < 350;
+                    
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isCompactScreen ? 12 : 20,
+                        vertical: isCompactScreen ? 8 : 16
+                      ),
+                      child: Column(
+                        children: [
+                          // Speedometer with adaptive sizing
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Calculate safe speedometer size based on screen dimensions
+                              final screenWidth = MediaQuery.of(context).size.width;
+                              final screenHeight = MediaQuery.of(context).size.height;
+                              final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+                              
+                              // Calculate base size with a different approach for portrait/landscape
+                              final baseSize = isLandscape 
+                                  ? min(screenWidth * 0.5, screenHeight * 0.7)
+                                  : min(screenWidth * 0.85, screenHeight * 0.4);
+                              
+                              // Ensure the speedometer size is reasonable with hard limits
+                              final safeSize = baseSize.clamp(
+                                200.0,  // Minimum size 
+                                min(screenWidth * 0.85, 400.0)  // Maximum size
+                              ).toDouble();
+                              
+                              return Center(
+                                child: Speedometer(
+                                  speed: _currentSpeed,
+                                  maxSpeed: Provider.of<SettingsService>(context).settings.maxSpeedometer.toDouble(),
+                                  size: safeSize,
+                                  unit: Provider.of<SettingsService>(context).settings.speedUnit,
+                                ),
+                              ).animate().fadeIn().scale(
+                                delay: 300.milliseconds,
+                                duration: 500.milliseconds,
+                                curve: Curves.easeOutBack,
+                              );
+                            }
+                          ),
+
+                          SizedBox(height: isCompactScreen ? 8 : 16),
+
+                          // GPS status indicator - always visible
+                          Center(
+                            child: GestureDetector(
+                              onTap: _showGpsDetailsDialog,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.cardDark,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        _isTracking && _locationService.currentPosition == null 
+                                            ? SizedBox(
+                                                width: 18,
+                                                height: 18,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  color: Colors.orange,
+                                                ),
+                                              )
+                                            : Icon(
+                                                Icons.gps_fixed,
+                                                color:
+                                                    _locationService.currentPosition != null
+                                                        ? _getGpsAccuracyColor()
+                                                        : Colors.grey,
+                                                size: 18,
+                                              ),
+                                        const SizedBox(width: 8),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'GPS Signal',
+                                              style: TextStyle(
+                                                color: AppTheme.textSecondaryDark,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  _locationService.currentPosition != null
+                                                      ? _getGpsAccuracyLevel()
+                                                      : _isTracking 
+                                                          ? 'Activating GPS...'
+                                                          : 'Waiting for GPS...',
+                                                  style: TextStyle(
+                                                    color:
+                                                        _locationService.currentPosition != null
+                                                            ? AppTheme.textDark
+                                                            : _isTracking
+                                                                ? Colors.orange
+                                                                : AppTheme.textSecondaryDark,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    
+                                    // Show retry button if GPS is unavailable for some time while tracking
+                                    if (_isTracking && _locationService.currentPosition == null)
+                                      TextButton(
+                                        onPressed: () async {
+                                          // Stop current tracking
+                                          _locationService.stopTracking();
+                                          // Restart tracking
+                                          await _locationService.startTracking();
+                                          // Update subscriptions
+                                          _speedSubscription?.cancel();
+                                          _speedSubscription = _locationService.speedStream.listen(_updateSpeed);
+                                        },
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.refresh, size: 14),
+                                            SizedBox(width: 4),
+                                            Text(
+                                              'Retry GPS',
+                                              style: TextStyle(fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ).animate().fadeIn(delay: 350.milliseconds),
+
+                          const SizedBox(height: 24),
+
+                          // Start/Stop tracking button
+                          Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 180,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color:
+                                    _isTracking ? Colors.red : AppTheme.primaryColor,
+                                borderRadius: BorderRadius.circular(28),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (_isTracking
+                                            ? Colors.red
+                                            : AppTheme.primaryColor)
+                                        .withOpacity(0.3),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: _toggleTracking,
+                                  borderRadius: BorderRadius.circular(28),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      AnimatedBuilder(
+                                        animation: _animationController,
+                                        builder: (context, child) {
+                                          return Icon(
+                                            _isTracking
+                                                ? Icons.stop
+                                                : Icons.play_arrow,
+                                            color: Colors.white,
+                                            size:
+                                                24 + (_animationController.value * 4),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _isTracking ? 'STOP' : 'START',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ).animate().fadeIn().scale(
+                            delay: 400.milliseconds,
+                            duration: 200.milliseconds,
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // Stats grid with adaptive layout - completely redesigned
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Calculate available width
+                              final availableWidth = constraints.maxWidth;
+                              
+                              // For extremely small screens, use a column layout
+                              if (availableWidth < 300) {
+                                return Column(
+                                  children: [
+                                    _buildStatsRow(
+                                      context,
+                                      'MAX SPEED',
+                                      _maxSpeed.toStringAsFixed(1),
+                                      Provider.of<SettingsService>(context).settings.speedUnit,
+                                      Icons.speed,
+                                      Colors.orange,
+                                      500.milliseconds,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildStatsRow(
+                                      context,
+                                      'AVG SPEED',
+                                      _avgSpeed.toStringAsFixed(1),
+                                      Provider.of<SettingsService>(context).settings.speedUnit,
+                                      Icons.calculate,
+                                      Colors.green,
+                                      600.milliseconds,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildStatsRow(
+                                      context,
+                                      'DISTANCE',
+                                      _formatDistance(_distance),
+                                      _getDistanceUnit(_distance),
+                                      Icons.straighten,
+                                      Colors.blue,
+                                      700.milliseconds,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildStatsRow(
+                                      context,
+                                      'TIME',
+                                      _formattedTime,
+                                      'min',
+                                      Icons.timer,
+                                      Colors.purple,
+                                      800.milliseconds,
+                                    ),
+                                  ],
+                                );
+                              }
+                              
+                              // For other screens, use a grid but with adjusted parameters
+                              return Column(
+                                children: [
+                                  // First row
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: StatsCard(
+                                          title: 'MAX SPEED',
+                                          value: _maxSpeed.toStringAsFixed(1),
+                                          unit: Provider.of<SettingsService>(context).settings.speedUnit,
+                                          icon: Icons.speed,
+                                          color: Colors.orange,
+                                        ).animate().fadeIn(delay: 500.milliseconds),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: StatsCard(
+                                          title: 'AVG SPEED',
+                                          value: _avgSpeed.toStringAsFixed(1),
+                                          unit: Provider.of<SettingsService>(context).settings.speedUnit,
+                                          icon: Icons.calculate,
+                                          color: Colors.green,
+                                        ).animate().fadeIn(delay: 600.milliseconds),
+                                      ),
+                                    ],
+                                  ),
+                                  
+                                  const SizedBox(height: 12),
+                                  
+                                  // Second row
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: StatsCard(
+                                          title: 'DISTANCE',
+                                          value: _formatDistance(_distance),
+                                          unit: _getDistanceUnit(_distance),
+                                          icon: Icons.straighten,
+                                          color: Colors.blue,
+                                        ).animate().fadeIn(delay: 700.milliseconds),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: StatsCard(
+                                          title: 'TIME',
+                                          value: _formattedTime,
+                                          unit: 'min',
+                                          icon: Icons.timer,
+                                          color: Colors.purple,
+                                        ).animate().fadeIn(delay: 800.milliseconds),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            }
+                          ),
+
+                          // Bottom padding for scrolling
+                          SizedBox(height: MediaQuery.of(context).padding.bottom + 30),
+                        ],
+                      ),
+                    );
+                  }
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1091,5 +916,287 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
     }
 
     return success;
+  }
+
+  // Display the save confirmation dialog
+  Future<bool> _onWillPop() async {
+    if (_hasUnsavedTrip) {
+      _showExitDialog();
+      return false;
+    }
+    return true;
+  }
+  
+  // Show dialog when trying to exit with unsaved changes
+  void _showExitDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardDark,
+        title: const Text(
+          'Unsaved Trip',
+          style: TextStyle(color: AppTheme.textDark),
+        ),
+        content: const Text(
+          'You have an unsaved trip. Do you want to save it before exiting?',
+          style: TextStyle(color: AppTheme.textSecondaryDark),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _handleDiscardTrip();
+              Navigator.pop(context); // Exit screen
+            },
+            child: const Text('Discard', style: TextStyle(color: Colors.redAccent)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              _handleSaveTrip();
+              Navigator.pop(context); // Exit screen
+            },
+            child: const Text('Save', style: TextStyle(color: AppTheme.primaryColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods to determine GPS accuracy display
+  String _getAccuracyText(double? accuracy) {
+    if (accuracy == null) return 'No Signal';
+    if (accuracy <= 4) return 'Excellent';
+    if (accuracy <= 8) return 'Good';
+    if (accuracy <= 15) return 'Moderate';
+    if (accuracy <= 30) return 'Poor';
+    return 'Weak';
+  }
+  
+  Color _getAccuracyColor(double? accuracy) {
+    if (accuracy == null) return Colors.grey;
+    if (accuracy <= 4) return Colors.greenAccent;
+    if (accuracy <= 8) return Colors.green;
+    if (accuracy <= 15) return Colors.amber;
+    if (accuracy <= 30) return Colors.orange;
+    return Colors.red;
+  }
+
+  // Add a new method to show detailed GPS information
+  void _showGpsDetailsDialog() {
+    if (_locationService.currentPosition == null) {
+      // If no position available, show a message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GPS data not available yet'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final position = _locationService.currentPosition!;
+    final speedInKmh = position.speed * 3.6; // Convert m/s to km/h
+    final speedInMph = position.speed * 2.23694; // Convert m/s to mph
+    
+    // Format timestamp for better readability
+    final timestamp = position.timestamp;
+    final formattedTimestamp = DateFormat('yyyy-MM-dd HH:mm:ss.SSS').format(timestamp.toLocal());
+    final timeAgo = DateTime.now().difference(timestamp);
+    
+    // Format lat/long with appropriate precision
+    final latString = position.latitude.toStringAsFixed(6);
+    final longString = position.longitude.toStringAsFixed(6);
+    
+    // Format accuracy values
+    final horizontalAccuracy = position.accuracy.toStringAsFixed(2);
+    final speedAccuracy = position.speedAccuracy.toStringAsFixed(2);
+    final altitudeAccuracy = position.altitudeAccuracy?.toStringAsFixed(2) ?? 'N/A';
+    final headingAccuracy = position.headingAccuracy?.toStringAsFixed(2) ?? 'N/A';
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: AppTheme.cardDark,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dialog title
+                Row(
+                  children: [
+                    Icon(
+                      Icons.satellite_alt,
+                      color: _getGpsAccuracyColor(),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'GPS Signal Details',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Information in sections for readability
+                // Location Section
+                _buildGpsDetailSection(
+                  'LOCATION',
+                  [
+                    _buildDetailRow('Latitude', latString),
+                    _buildDetailRow('Longitude', longString),
+                    _buildDetailRow('Altitude', '${position.altitude.toStringAsFixed(2)} m'),
+                  ],
+                ),
+                
+                const Divider(color: AppTheme.textSecondaryDark),
+                
+                // Accuracy Section
+                _buildGpsDetailSection(
+                  'ACCURACY',
+                  [
+                    _buildDetailRow('Horizontal', '$horizontalAccuracy m', 
+                      valueColor: _getAccuracyColor(position.accuracy)),
+                    _buildDetailRow('Altitude', '$altitudeAccuracy m'),
+                    _buildDetailRow('Speed', '$speedAccuracy m/s'),
+                    _buildDetailRow('Heading', '$headingAccuracy°'),
+                  ],
+                ),
+                
+                const Divider(color: AppTheme.textSecondaryDark),
+                
+                // Motion Section
+                _buildGpsDetailSection(
+                  'MOTION',
+                  [
+                    _buildDetailRow('Speed (m/s)', '${position.speed.toStringAsFixed(2)} m/s'),
+                    _buildDetailRow('Speed (km/h)', '${speedInKmh.toStringAsFixed(2)} km/h'),
+                    _buildDetailRow('Speed (mph)', '${speedInMph.toStringAsFixed(2)} mph'),
+                    _buildDetailRow('Heading', '${position.heading.toStringAsFixed(1)}°'),
+                  ],
+                ),
+                
+                const Divider(color: AppTheme.textSecondaryDark),
+                
+                // Timestamp Section
+                _buildGpsDetailSection(
+                  'TIMESTAMP',
+                  [
+                    _buildDetailRow('Time', formattedTimestamp),
+                    _buildDetailRow('Age', _formatTimeDifference(timeAgo)),
+                  ],
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Copy coordinates button
+                Center(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.copy, size: 18),
+                    label: const Text('Copy Coordinates'),
+                    onPressed: () {
+                      Clipboard.setData(
+                        ClipboardData(text: '$latString, $longString'),
+                      ).then((_) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Coordinates copied to clipboard'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        Navigator.of(context).pop();
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                Center(
+                  child: TextButton(
+                    child: const Text('Close'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  // Helper method to build a section of GPS details
+  Widget _buildGpsDetailSection(String title, List<Widget> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryColor,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...items,
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+  
+  // Helper method to build a detail row with label and value
+  Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondaryDark,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'monospace',
+              color: valueColor ?? AppTheme.textDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Helper method to format time difference for display
+  String _formatTimeDifference(Duration duration) {
+    if (duration.inSeconds < 60) {
+      return '${duration.inSeconds} seconds ago';
+    } else if (duration.inMinutes < 60) {
+      return '${duration.inMinutes} minutes ago';
+    } else {
+      return '${duration.inHours} hours ago';
+    }
   }
 }

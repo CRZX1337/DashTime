@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/theme.dart';
+import '../config/responsive_util.dart';
+import '../widgets/responsive_builder.dart';
 
 class MenuScreen extends StatefulWidget {
   final VoidCallback onSpeedometerTap;
@@ -22,13 +24,26 @@ class MenuScreen extends StatefulWidget {
   State<MenuScreen> createState() => _MenuScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> {
+class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   Timer? _devMenuTimer;
   bool _isHolding = false;
+  Map<String, bool> _hoveredItems = {};
+  Map<String, bool> _pressedItems = {};
+  late AnimationController _rippleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rippleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+  }
 
   @override
   void dispose() {
     _devMenuTimer?.cancel();
+    _rippleController.dispose();
     super.dispose();
   }
 
@@ -208,6 +223,9 @@ class _MenuScreenState extends State<MenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape = ResponsiveUtil.isLandscape(context);
+    final deviceType = ResponsiveUtil.getDeviceType(context);
+    
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -221,101 +239,242 @@ class _MenuScreenState extends State<MenuScreen> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 40),
-              
-              // App title
-              Center(
-                child: Text(
-                  'DashTime',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: AppTheme.textDark,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ).animate().fadeIn().slideY(
-                  begin: -0.2,
-                  end: 0,
-                  duration: 500.milliseconds,
-                  curve: Curves.easeOutQuart,
+          child: OrientationLayoutBuilder(
+            portrait: _buildPortraitLayout(context),
+            landscape: _buildLandscapeLayout(context),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildPortraitLayout(BuildContext context) {
+    final deviceType = ResponsiveUtil.getDeviceType(context);
+    
+    // Adjust spacing based on screen size
+    final topSpacing = ResponsiveUtil.value<double>(
+      context: context,
+      small: 30,
+      medium: 40,
+      large: 50,
+      tablet: 60,
+      desktop: 70,
+    );
+    
+    final menuSpacing = ResponsiveUtil.value<double>(
+      context: context,
+      small: 60,
+      medium: 70,
+      large: 80,
+      tablet: 90,
+      desktop: 100,
+    );
+    
+    final itemSpacing = ResponsiveUtil.value<double>(
+      context: context,
+      small: 16,
+      medium: 18,
+      large: 20,
+      tablet: 24,
+      desktop: 28,
+    );
+    
+    // Adjust horizontal padding based on screen size
+    final horizontalPadding = ResponsiveUtil.value<double>(
+      context: context,
+      small: 24,
+      medium: 32,
+      large: 32,
+      tablet: 48,
+      desktop: 64,
+    );
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(height: topSpacing),
+        
+        // App title
+        Center(
+          child: Text(
+            'DashTime',
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              color: AppTheme.textDark,
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveUtil.scaledFontSize(
+                context, 
+                base: 36,
+                minFontSize: 28,
+                maxFontSize: 48,
+              ),
+            ),
+          ).animate().fadeIn().slideY(
+            begin: -0.2,
+            end: 0,
+            duration: 500.milliseconds,
+            curve: Curves.easeOutQuart,
+          ),
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // App subtitle with long press detection for developer menu
+        Center(
+          child: GestureDetector(
+            onLongPressStart: (_) => _startDevMenuTimer(),
+            onLongPressEnd: (_) => _cancelDevMenuTimer(),
+            child: Text(
+              'GPS Speedometer',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: AppTheme.primaryColor,
+                letterSpacing: 2.0,
+                fontSize: ResponsiveUtil.scaledFontSize(
+                  context, 
+                  base: 16,
+                  minFontSize: 14,
+                  maxFontSize: 20,
                 ),
+              ),
+            ).animate().fadeIn(delay: 200.milliseconds).slideY(
+              begin: -0.2,
+              end: 0,
+              duration: 400.milliseconds,
+              curve: Curves.easeOutQuart,
+            ),
+          ),
+        ),
+        
+        SizedBox(height: menuSpacing),
+        
+        // Menu items
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMenuItem(
+                  context,
+                  'Speedometer',
+                  Icons.speed,
+                  widget.onSpeedometerTap,
+                  delay: 300.milliseconds,
+                ),
+                
+                SizedBox(height: itemSpacing),
+                
+                _buildMenuItem(
+                  context,
+                  'Acceleration',
+                  Icons.timer,
+                  widget.onAccelerationTap,
+                  delay: 350.milliseconds,
+                ),
+                
+                SizedBox(height: itemSpacing),
+                
+                _buildMenuItem(
+                  context,
+                  'History',
+                  Icons.history,
+                  widget.onHistoryTap,
+                  delay: 400.milliseconds,
+                ),
+                
+                SizedBox(height: itemSpacing),
+                
+                _buildMenuItem(
+                  context,
+                  'Settings',
+                  Icons.settings,
+                  widget.onSettingsTap,
+                  delay: 500.milliseconds,
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Version info
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Version 1.0.0',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppTheme.textSecondaryDark.withOpacity(0.7),
+              fontSize: ResponsiveUtil.scaledFontSize(
+                context, 
+                base: 12,
+                minFontSize: 10,
+                maxFontSize: 14,
+              ),
+            ),
+          ).animate().fadeIn(delay: 600.milliseconds),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildLandscapeLayout(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    return Row(
+      children: [
+        // Left side with title
+        SizedBox(
+          width: screenWidth * 0.4,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App title
+              Text(
+                'DashTime',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: AppTheme.textDark,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtil.scaledFontSize(
+                    context, 
+                    base: 36,
+                    minFontSize: 24,
+                    maxFontSize: 40,
+                  ),
+                ),
+              ).animate().fadeIn().slideY(
+                begin: -0.2,
+                end: 0,
+                duration: 500.milliseconds,
+                curve: Curves.easeOutQuart,
               ),
               
               const SizedBox(height: 8),
               
               // App subtitle with long press detection for developer menu
-              Center(
-                child: GestureDetector(
-                  onLongPressStart: (_) => _startDevMenuTimer(),
-                  onLongPressEnd: (_) => _cancelDevMenuTimer(),
-                  child: Text(
-                    'GPS Speedometer',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.primaryColor,
-                      letterSpacing: 2.0,
+              GestureDetector(
+                onLongPressStart: (_) => _startDevMenuTimer(),
+                onLongPressEnd: (_) => _cancelDevMenuTimer(),
+                child: Text(
+                  'GPS Speedometer',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppTheme.primaryColor,
+                    letterSpacing: 2.0,
+                    fontSize: ResponsiveUtil.scaledFontSize(
+                      context, 
+                      base: 16,
+                      minFontSize: 12,
+                      maxFontSize: 18,
                     ),
-                  ).animate().fadeIn(delay: 200.milliseconds).slideY(
-                    begin: -0.2,
-                    end: 0,
-                    duration: 400.milliseconds,
-                    curve: Curves.easeOutQuart,
                   ),
+                ).animate().fadeIn(delay: 200.milliseconds).slideY(
+                  begin: -0.2,
+                  end: 0,
+                  duration: 400.milliseconds,
+                  curve: Curves.easeOutQuart,
                 ),
               ),
               
-              const SizedBox(height: 80),
-              
-              // Menu items
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildMenuItem(
-                        context,
-                        'Speedometer',
-                        Icons.speed,
-                        widget.onSpeedometerTap,
-                        delay: 300.milliseconds,
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      _buildMenuItem(
-                        context,
-                        'Acceleration',
-                        Icons.timer,
-                        widget.onAccelerationTap,
-                        delay: 350.milliseconds,
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      _buildMenuItem(
-                        context,
-                        'History',
-                        Icons.history,
-                        widget.onHistoryTap,
-                        delay: 400.milliseconds,
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      _buildMenuItem(
-                        context,
-                        'Settings',
-                        Icons.settings,
-                        widget.onSettingsTap,
-                        delay: 500.milliseconds,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // Version info
+              // Version info at bottom of left side
+              const Spacer(),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
@@ -330,7 +489,56 @@ class _MenuScreenState extends State<MenuScreen> {
             ],
           ),
         ),
-      ),
+        
+        // Right side with menu items
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMenuItem(
+                  context,
+                  'Speedometer',
+                  Icons.speed,
+                  widget.onSpeedometerTap,
+                  delay: 300.milliseconds,
+                ),
+                
+                const SizedBox(height: 16),
+                
+                _buildMenuItem(
+                  context,
+                  'Acceleration',
+                  Icons.timer,
+                  widget.onAccelerationTap,
+                  delay: 350.milliseconds,
+                ),
+                
+                const SizedBox(height: 16),
+                
+                _buildMenuItem(
+                  context,
+                  'History',
+                  Icons.history,
+                  widget.onHistoryTap,
+                  delay: 400.milliseconds,
+                ),
+                
+                const SizedBox(height: 16),
+                
+                _buildMenuItem(
+                  context,
+                  'Settings',
+                  Icons.settings,
+                  widget.onSettingsTap,
+                  delay: 500.milliseconds,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -341,13 +549,56 @@ class _MenuScreenState extends State<MenuScreen> {
     VoidCallback onTap, {
     Duration delay = Duration.zero,
   }) {
+    final deviceType = ResponsiveUtil.getDeviceType(context);
+    final isLandscape = ResponsiveUtil.isLandscape(context);
+    
+    // Adjust font size based on device
+    final fontSize = ResponsiveUtil.value<double>(
+      context: context,
+      small: 16,
+      medium: 17,
+      large: 18,
+      tablet: 20,
+      desktop: 22,
+    );
+    
+    // Adjust icon size based on device
+    final iconSize = ResponsiveUtil.value<double>(
+      context: context,
+      small: 24,
+      medium: 26,
+      large: 28,
+      tablet: 30,
+      desktop: 32,
+    );
+    
+    // Adjust padding based on orientation and device
+    final verticalPadding = ResponsiveUtil.value<double>(
+      context: context,
+      small: isLandscape ? 12 : 16,
+      medium: isLandscape ? 14 : 18,
+      large: isLandscape ? 16 : 20,
+      tablet: isLandscape ? 18 : 22,
+      desktop: isLandscape ? 20 : 24,
+    );
+    
+    final horizontalPadding = ResponsiveUtil.value<double>(
+      context: context,
+      small: 16,
+      medium: 20,
+      large: 24,
+      tablet: 28,
+      desktop: 32,
+    );
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+        splashColor: AppTheme.primaryColor.withOpacity(0.15),
+        highlightColor: AppTheme.primaryColor.withOpacity(0.05),
+        child: Ink(
           decoration: BoxDecoration(
             color: AppTheme.cardDark,
             borderRadius: BorderRadius.circular(16),
@@ -360,36 +611,42 @@ class _MenuScreenState extends State<MenuScreen> {
               ),
             ],
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              vertical: verticalPadding, 
+              horizontal: horizontalPadding
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppTheme.primaryColor,
+                    size: iconSize,
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.primaryColor,
-                  size: 28,
+                const SizedBox(width: 16),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textDark,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textDark,
+                const Spacer(),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: AppTheme.textSecondaryDark,
+                  size: 16,
                 ),
-              ),
-              const Spacer(),
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: AppTheme.textSecondaryDark,
-                size: 16,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
