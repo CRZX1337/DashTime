@@ -537,7 +537,7 @@ class LocationService {
       );
     }
     
-    // Set demo scenario based on target speed
+    // Set demo scenario based on target speed - now scaled to the target speed
     if (speed <= 40) {
       _demoScenario = 'city';
     } else if (speed <= 80) {
@@ -548,9 +548,26 @@ class LocationService {
       _demoScenario = 'racetrack';
     }
     
-    // Start simulation timer if not already running
+    // No longer auto-start the simulation timer - caller must call startDemoMovement explicitly
     _simulationTimer?.cancel();
-    _simulationTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) {
+    _simulationTimer = null;
+    
+    print("Location simulation enabled with speed: $_targetSpeed km/h, acceleration: $_accelerationRate, scenario: $_demoScenario");
+  }
+  
+  // Start the demo movement (for use when the user presses "START" button)
+  void startDemoMovement() {
+    if (!_isSimulationMode) return;
+    
+    // Reset speed and counters to start fresh
+    _simulatedSpeed = 0.0;
+    _scenarioPhase = 0;
+    _phaseCounter = 0;
+    
+    // Start the simulation timer to begin movement
+    _simulationTimer?.cancel();
+    // Update more frequently (500ms) for smoother simulation
+    _simulationTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!_isSimulationMode) {
         timer.cancel();
         return;
@@ -559,7 +576,33 @@ class LocationService {
       _generateSimulatedLocation();
     });
     
-    print("Location simulation enabled with speed: $_targetSpeed km/h, acceleration: $_accelerationRate, scenario: $_demoScenario");
+    print("Demo movement started - beginning acceleration");
+  }
+  
+  // Stop the demo movement (for use when the user presses "STOP" button)
+  void stopDemoMovement() {
+    // Cancel the timer but keep simulation mode enabled
+    _simulationTimer?.cancel();
+    _simulationTimer = null;
+    
+    print("Demo movement stopped - vehicle stationary");
+  }
+  
+  // Reset demo state for a new test
+  void resetDemoState() {
+    // Cancel existing timer
+    _simulationTimer?.cancel();
+    _simulationTimer = null;
+    
+    // Reset speed and progress
+    _simulatedSpeed = 0.0;
+    _scenarioPhase = 0;
+    _phaseCounter = 0;
+    
+    // Update speed controllers to report 0
+    _speedController.add(0.0);
+    
+    print("Demo state reset for new test");
   }
   
   // Disable simulation mode
@@ -685,13 +728,15 @@ class LocationService {
   void _updateSimulatedSpeed() {
     _phaseCounter++;
     
-    // Regular scenario phase transitions
-    if (_phaseCounter >= 20) {
+    // Regular scenario phase transitions - more dynamic transition timing
+    final phaseLength = _random.nextInt(5) + 15; // Between 15-20 cycles per phase for unpredictability
+    if (_phaseCounter >= phaseLength) {
       _phaseCounter = 0;
       _scenarioPhase = (_scenarioPhase + 1) % 5; // 5 phases in each scenario
+      print("Transitioning to phase: $_scenarioPhase in scenario: $_demoScenario");
     }
     
-    // Calculate speed pattern based on scenario
+    // Calculate speed pattern based on scenario - ensure proper scaling to target speed
     switch (_demoScenario) {
       case 'city':
         _updateCityDriving();
@@ -710,113 +755,178 @@ class LocationService {
         break;
         
       default:
-        // Simple approach for default
-        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        // Simple approach for default - ensure it reaches target speed
+        final randomFactor = _random.nextDouble() * 0.2 - 0.1; // -10% to +10%
+        _simulatedSpeed = _targetSpeed * (1 + randomFactor);
     }
+    
+    // Add some randomized micro-variations for realism
+    _simulatedSpeed += _random.nextDouble() * 2 - 1;
     
     // Ensure speed is never negative
     _simulatedSpeed = math.max(0, _simulatedSpeed);
+    
+    // Add logging to help debug
+    if (_phaseCounter % 5 == 0) {
+      print("Current phase: $_scenarioPhase, Speed: $_simulatedSpeed km/h, Target: $_targetSpeed km/h");
+    }
   }
   
   // City driving patterns (stop and go traffic, traffic lights)
   void _updateCityDriving() {
+    // Scale percentages of the target speed
+    final maxSpeed = _targetSpeed;
+    final cruisingSpeed = maxSpeed * 0.95;
+    final slowSpeed = maxSpeed * 0.3;
+    
     switch (_scenarioPhase) {
       case 0: // Accelerating from stop
-        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (3.0 * _accelerationRate));
+        // Use the actual acceleration rate setting
+        _simulatedSpeed = math.min(cruisingSpeed, _simulatedSpeed + (3.0 * _accelerationRate));
         break;
         
       case 1: // Cruising
-        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        // Target the cruising speed with some variations
+        final targetWithVariation = cruisingSpeed + (_random.nextDouble() * maxSpeed * 0.1 - maxSpeed * 0.05);
+        _applySmoothedSpeedChange(targetWithVariation, 0.7 * _accelerationRate);
         break;
         
       case 2: // Slowing for traffic/light
-        _simulatedSpeed = math.max(5, _simulatedSpeed - (2.0 * _accelerationRate));
+        // Gradually reduce speed
+        _applySmoothedSpeedChange(slowSpeed, 0.8 * _accelerationRate);
         break;
         
       case 3: // Stopped or very slow
-        _simulatedSpeed = math.max(0, _simulatedSpeed - (2.5 * _accelerationRate));
-        if (_simulatedSpeed < 3) _simulatedSpeed = 0;
+        // Come to a complete stop sometimes
+        final stopChance = _random.nextDouble();
+        if (stopChance > 0.3) {
+          _applySmoothedSpeedChange(0, 1.1 * _accelerationRate);
+        } else {
+          _applySmoothedSpeedChange(slowSpeed * 0.5, 0.6 * _accelerationRate);
+        }
         break;
         
       case 4: // Accelerating again
-        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (2.5 * _accelerationRate));
+        // Accelerate based on user's acceleration setting
+        _simulatedSpeed = math.min(cruisingSpeed, _simulatedSpeed + (2.5 * _accelerationRate));
         break;
     }
   }
   
   // Highway driving patterns (consistent high speed with occasional slowdowns)
   void _updateHighwayDriving() {
+    // Scale all speeds relative to the target
+    final maxSpeed = _targetSpeed;
+    final cruisingSpeed = maxSpeed;
+    final slowdownSpeed = maxSpeed * 0.75;
+    
     switch (_scenarioPhase) {
       case 0: // Accelerating to highway speed
-        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (2.0 * _accelerationRate));
+        _simulatedSpeed = math.min(cruisingSpeed, _simulatedSpeed + (2.0 * _accelerationRate));
         break;
         
       case 1: // Cruising at target
-        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        // Target the cruising speed with slight variations
+        final targetWithVariation = cruisingSpeed + (_random.nextDouble() * maxSpeed * 0.08 - maxSpeed * 0.04);
+        _applySmoothedSpeedChange(targetWithVariation, 0.6 * _accelerationRate);
         break;
         
       case 2: // Slight slowdown (traffic)
-        _simulatedSpeed = math.max(_targetSpeed * 0.7, _simulatedSpeed - (1.0 * _accelerationRate));
+        _applySmoothedSpeedChange(slowdownSpeed, 0.8 * _accelerationRate);
         break;
         
       case 3: // Resuming speed
-        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (1.5 * _accelerationRate));
+        _simulatedSpeed = math.min(cruisingSpeed, _simulatedSpeed + (1.5 * _accelerationRate));
         break;
         
       case 4: // Slight variation in speed
-        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 8 - 4);
+        // More significant variations for realism
+        final variationAmount = maxSpeed * (_random.nextDouble() * 0.15 - 0.05); // -5% to +15%
+        final targetWithVariation = cruisingSpeed + variationAmount;
+        _applySmoothedSpeedChange(targetWithVariation, 0.7 * _accelerationRate);
         break;
     }
   }
   
   // Racetrack driving patterns (high speed, hard acceleration and braking)
   void _updateRacetrackDriving() {
+    // Scale everything relative to target speed
+    final maxSpeed = _targetSpeed;
+    final topSpeed = maxSpeed * 1.15; // 15% above target for bursts
+    final cornerSpeed = maxSpeed * 0.6; // 60% of target for corners
+    
     switch (_scenarioPhase) {
       case 0: // Hard acceleration
-        _simulatedSpeed = math.min(_targetSpeed * 1.1, _simulatedSpeed + (5.0 * _accelerationRate));
+        _simulatedSpeed = math.min(topSpeed, _simulatedSpeed + (5.0 * _accelerationRate));
         break;
         
       case 1: // Top speed on straight
-        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 10);
+        final targetWithVariation = topSpeed - (_random.nextDouble() * maxSpeed * 0.05);
+        _applySmoothedSpeedChange(targetWithVariation, 0.9 * _accelerationRate);
         break;
         
       case 2: // Hard braking for turn
-        _simulatedSpeed = math.max(_targetSpeed * 0.6, _simulatedSpeed - (4.0 * _accelerationRate));
+        _applySmoothedSpeedChange(cornerSpeed, 1.2 * _accelerationRate);
         break;
         
       case 3: // Through the turn
-        _simulatedSpeed = _simulatedSpeed - (1.0 * _accelerationRate) + (_random.nextDouble() * 2);
+        // Slight variations during cornering
+        final targetWithVariation = cornerSpeed + (_random.nextDouble() * maxSpeed * 0.08 - maxSpeed * 0.04);
+        _applySmoothedSpeedChange(targetWithVariation, 0.7 * _accelerationRate);
         break;
         
       case 4: // Accelerating out of turn
-        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (4.0 * _accelerationRate));
+        _simulatedSpeed = math.min(maxSpeed, _simulatedSpeed + (4.0 * _accelerationRate));
         break;
     }
   }
   
   // Mountain driving patterns (winding roads, varied speeds)
   void _updateMountainDriving() {
+    // Scale to target speed
+    final maxSpeed = _targetSpeed;
+    final uphillSpeed = maxSpeed * 0.7;
+    final downhillSpeed = maxSpeed * 1.1;
+    final curveSpeed = maxSpeed * 0.5;
+    
     switch (_scenarioPhase) {
       case 0: // Uphill section
-        _simulatedSpeed = math.max(_targetSpeed * 0.7, _simulatedSpeed - (1.0 * _accelerationRate));
+        _applySmoothedSpeedChange(uphillSpeed, 0.8 * _accelerationRate);
         break;
         
       case 1: // Cruising on straight section
-        _simulatedSpeed = _targetSpeed + (_random.nextDouble() * 5 - 2.5);
+        final targetWithVariation = maxSpeed + (_random.nextDouble() * maxSpeed * 0.1 - maxSpeed * 0.05);
+        _applySmoothedSpeedChange(targetWithVariation, 0.9 * _accelerationRate);
         break;
         
       case 2: // Slowing for curve
-        _simulatedSpeed = math.max(_targetSpeed * 0.5, _simulatedSpeed - (2.0 * _accelerationRate));
+        _applySmoothedSpeedChange(curveSpeed, 1.0 * _accelerationRate);
         break;
         
       case 3: // Through tight curves
-        _simulatedSpeed = _targetSpeed * 0.6 + (_random.nextDouble() * 5 - 2.5);
+        final targetWithVariation = curveSpeed + (_random.nextDouble() * maxSpeed * 0.1 - maxSpeed * 0.05);
+        _applySmoothedSpeedChange(targetWithVariation, 0.8 * _accelerationRate);
         break;
         
-      case 4: // Accelerating on straightaway
-        _simulatedSpeed = math.min(_targetSpeed, _simulatedSpeed + (2.0 * _accelerationRate));
+      case 4: // Accelerating on straightaway or downhill
+        // Sometimes extra speed on downhill
+        final isDownhill = _random.nextBool();
+        final targetSpeed = isDownhill ? downhillSpeed : maxSpeed;
+        _applySmoothedSpeedChange(targetSpeed, 1.1 * _accelerationRate);
         break;
     }
+  }
+  
+  // Helper method for smoother speed transitions
+  void _applySmoothedSpeedChange(double targetSpeed, double rate) {
+    // Calculate the speed difference
+    final speedDiff = targetSpeed - _simulatedSpeed;
+    
+    // Apply a portion of the difference based on rate
+    final changeAmount = speedDiff * 0.15 * rate;
+    
+    // Apply the change
+    _simulatedSpeed += changeAmount;
   }
 
   // Dispose resources

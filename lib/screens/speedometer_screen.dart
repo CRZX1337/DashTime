@@ -87,6 +87,12 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
     } else if (available) {
       // If we started tracking during the check, stop it until user explicitly starts
       _locationService.stopTracking();
+      
+      // If using simulation, make sure it's prepared but not running yet
+      if (_locationService.isSimulationMode) {
+        // Reset state for when user presses start
+        _locationService.resetDemoState();
+      }
     }
   }
 
@@ -111,6 +117,12 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
     if (_isTracking) {
       // Stop tracking
       _locationService.stopTracking();
+      
+      // If in simulation mode, stop the demo movement
+      if (_locationService.isSimulationMode) {
+        _locationService.stopDemoMovement();
+      }
+      
       _speedSubscription?.cancel();
       _timer?.cancel();
       _animationController.reverse();
@@ -142,6 +154,11 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
 
         // Force screen to stay on during tracking
         WakelockPlus.toggle(enable: true);
+        
+        // If in simulation mode, start the demo movement
+        if (_locationService.isSimulationMode) {
+          _locationService.startDemoMovement();
+        }
         
         // Start the timer
         _startTimer();
@@ -541,25 +558,36 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
             // Main content
             Expanded(
               child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    // Speedometer
-                    Center(
-                      child: Speedometer(
-                        speed: _currentSpeed,
-                        maxSpeed: Provider.of<SettingsService>(context).settings.maxSpeedometer.toDouble(),
-                        size: 280.0,
-                        unit: Provider.of<SettingsService>(context).settings.speedUnit,
-                      ),
-                    ).animate().fadeIn().scale(
-                      delay: 300.milliseconds,
-                      duration: 500.milliseconds,
-                      curve: Curves.easeOutBack,
+                    // Speedometer with adaptive sizing
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Calculate safe speedometer size based on screen dimensions
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final screenHeight = MediaQuery.of(context).size.height;
+                        final baseSize = screenWidth * 0.85;
+                        // Ensure the speedometer isn't too large for smaller height devices
+                        final safeSize = baseSize.clamp(200.0, screenHeight * 0.4);
+                        
+                        return Center(
+                          child: Speedometer(
+                            speed: _currentSpeed,
+                            maxSpeed: Provider.of<SettingsService>(context).settings.maxSpeedometer.toDouble(),
+                            size: safeSize,
+                            unit: Provider.of<SettingsService>(context).settings.speedUnit,
+                          ),
+                        ).animate().fadeIn().scale(
+                          delay: 300.milliseconds,
+                          duration: 500.milliseconds,
+                          curve: Curves.easeOutBack,
+                        );
+                      }
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // GPS status indicator - always visible
                     Center(
@@ -732,54 +760,120 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
 
                     const SizedBox(height: 24),
 
-                    // Stats grid
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio:
-                          2.0, // Increased from 1.8 to fix overflow
-                      padding: const EdgeInsets.only(bottom: 24),
-                      children: [
-                        StatsCard(
-                          title: 'MAX SPEED',
-                          value: _maxSpeed.toStringAsFixed(1),
-                          unit: Provider.of<SettingsService>(context).settings.speedUnit,
-                          icon: Icons.speed,
-                          color: Colors.orange,
-                        ).animate().fadeIn(delay: 500.milliseconds),
-
-                        StatsCard(
-                          title: 'AVG SPEED',
-                          value: _avgSpeed.toStringAsFixed(1),
-                          unit: Provider.of<SettingsService>(context).settings.speedUnit,
-                          icon: Icons.calculate,
-                          color: Colors.green,
-                        ).animate().fadeIn(delay: 600.milliseconds),
-
-                        StatsCard(
-                          title: 'DISTANCE',
-                          value: _formatDistance(_distance),
-                          unit: _getDistanceUnit(_distance),
-                          icon: Icons.straighten,
-                          color: Colors.blue,
-                        ).animate().fadeIn(delay: 700.milliseconds),
-
-                        StatsCard(
-                          title: 'TIME',
-                          value: _formattedTime,
-                          unit: 'min',
-                          icon: Icons.timer,
-                          color: Colors.purple,
-                        ).animate().fadeIn(delay: 800.milliseconds),
-                      ],
+                    // Stats grid with adaptive layout - completely redesigned
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Calculate available width
+                        final availableWidth = constraints.maxWidth;
+                        
+                        // For extremely small screens, use a column layout
+                        if (availableWidth < 300) {
+                          return Column(
+                            children: [
+                              _buildStatsRow(
+                                context,
+                                'MAX SPEED',
+                                _maxSpeed.toStringAsFixed(1),
+                                Provider.of<SettingsService>(context).settings.speedUnit,
+                                Icons.speed,
+                                Colors.orange,
+                                500.milliseconds,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildStatsRow(
+                                context,
+                                'AVG SPEED',
+                                _avgSpeed.toStringAsFixed(1),
+                                Provider.of<SettingsService>(context).settings.speedUnit,
+                                Icons.calculate,
+                                Colors.green,
+                                600.milliseconds,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildStatsRow(
+                                context,
+                                'DISTANCE',
+                                _formatDistance(_distance),
+                                _getDistanceUnit(_distance),
+                                Icons.straighten,
+                                Colors.blue,
+                                700.milliseconds,
+                              ),
+                              const SizedBox(height: 8),
+                              _buildStatsRow(
+                                context,
+                                'TIME',
+                                _formattedTime,
+                                'min',
+                                Icons.timer,
+                                Colors.purple,
+                                800.milliseconds,
+                              ),
+                            ],
+                          );
+                        }
+                        
+                        // For other screens, use a grid but with adjusted parameters
+                        return Column(
+                          children: [
+                            // First row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: StatsCard(
+                                    title: 'MAX SPEED',
+                                    value: _maxSpeed.toStringAsFixed(1),
+                                    unit: Provider.of<SettingsService>(context).settings.speedUnit,
+                                    icon: Icons.speed,
+                                    color: Colors.orange,
+                                  ).animate().fadeIn(delay: 500.milliseconds),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: StatsCard(
+                                    title: 'AVG SPEED',
+                                    value: _avgSpeed.toStringAsFixed(1),
+                                    unit: Provider.of<SettingsService>(context).settings.speedUnit,
+                                    icon: Icons.calculate,
+                                    color: Colors.green,
+                                  ).animate().fadeIn(delay: 600.milliseconds),
+                                ),
+                              ],
+                            ),
+                            
+                            const SizedBox(height: 12),
+                            
+                            // Second row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: StatsCard(
+                                    title: 'DISTANCE',
+                                    value: _formatDistance(_distance),
+                                    unit: _getDistanceUnit(_distance),
+                                    icon: Icons.straighten,
+                                    color: Colors.blue,
+                                  ).animate().fadeIn(delay: 700.milliseconds),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: StatsCard(
+                                    title: 'TIME',
+                                    value: _formattedTime,
+                                    unit: 'min',
+                                    icon: Icons.timer,
+                                    color: Colors.purple,
+                                  ).animate().fadeIn(delay: 800.milliseconds),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      }
                     ),
 
-                    // Bottom padding - single SizedBox with sufficient height
-                    const SizedBox(height: 64),
-                    const SizedBox(height: 24),
+                    // Bottom padding for scrolling
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 30),
                   ],
                 ),
               ),
@@ -864,6 +958,90 @@ class _SpeedometerScreenState extends State<SpeedometerScreen>
         _isExiting = false;
       });
     }
+  }
+
+  // Helper method to build a horizontally compact stats row for very small screens
+  Widget _buildStatsRow(
+    BuildContext context,
+    String title,
+    String value,
+    String unit,
+    IconData icon,
+    Color color,
+    Duration animationDelay,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.cardDark,
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.cardDark,
+            Color.lerp(AppTheme.cardDark, color, 0.1) ?? AppTheme.cardDark,
+          ],
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppTheme.textSecondaryDark,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      color: AppTheme.textDark,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    unit,
+                    style: const TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const Spacer(),
+          Container(
+            height: 24,
+            width: 3,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(delay: animationDelay).slideX(
+      begin: 0.05,
+      end: 0,
+      delay: animationDelay,
+      curve: Curves.easeOutQuint,
+    );
   }
 
   // Save the current trip data

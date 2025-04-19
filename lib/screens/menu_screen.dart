@@ -6,12 +6,14 @@ import '../config/theme.dart';
 
 class MenuScreen extends StatefulWidget {
   final VoidCallback onSpeedometerTap;
+  final VoidCallback onAccelerationTap;
   final VoidCallback onHistoryTap;
   final VoidCallback onSettingsTap;
 
   const MenuScreen({
     super.key,
     required this.onSpeedometerTap,
+    required this.onAccelerationTap,
     required this.onHistoryTap,
     required this.onSettingsTap,
   });
@@ -277,6 +279,16 @@ class _MenuScreenState extends State<MenuScreen> {
                         Icons.speed,
                         widget.onSpeedometerTap,
                         delay: 300.milliseconds,
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      _buildMenuItem(
+                        context,
+                        'Acceleration',
+                        Icons.timer,
+                        widget.onAccelerationTap,
+                        delay: 350.milliseconds,
                       ),
                       
                       const SizedBox(height: 20),

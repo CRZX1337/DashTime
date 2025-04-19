@@ -19,74 +19,88 @@ class Speedometer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Background circle
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: AppTheme.cardDark,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 15,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-          ),
-          
-          // Speedometer arc - fills based on current/max speed
-          CustomPaint(
-            size: Size(size * 0.92, size * 0.92),
-            painter: SpeedometerPainter(
-              speed: speed,
-              maxSpeed: maxSpeed,
-            ),
-          ),
-          
-          // Small indicator dot at outer edge that moves with speed
-          _buildSpeedIndicator(),
-          
-          // Speed value display - clean with no box/background
-          Column(
-            mainAxisSize: MainAxisSize.min,
+    // Get screen size
+    final screenSize = MediaQuery.of(context).size;
+    
+    // Calculate dynamic size based on screen width with constraints
+    final dynamicSize = min(size, screenSize.width * 0.8);
+    final safeSize = min(dynamicSize, screenSize.height * 0.45);
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Apply additional constraints if needed
+        final constrainedSize = min(safeSize, constraints.maxWidth * 0.95);
+        
+        return SizedBox(
+          width: constrainedSize,
+          height: constrainedSize,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              // Speed value
-              Text(
-                speed.toStringAsFixed(1),
-                style: TextStyle(
-                  fontSize: size * 0.22,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+              // Background circle
+              Container(
+                width: constrainedSize,
+                height: constrainedSize,
+                decoration: BoxDecoration(
+                  color: AppTheme.cardDark,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 15,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-              ).animate().fadeIn().slideY(
-                begin: 0.3,
-                end: 0,
-                curve: Curves.easeOutQuart,
-                duration: 150.milliseconds,
               ),
-              // Speed unit
-              Text(
-                unit,
-                style: TextStyle(
-                  fontSize: size * 0.08,
-                  color: AppTheme.textSecondaryDark,
+              
+              // Speedometer arc - fills based on current/max speed
+              CustomPaint(
+                size: Size(constrainedSize * 0.92, constrainedSize * 0.92),
+                painter: SpeedometerPainter(
+                  speed: speed,
+                  maxSpeed: maxSpeed,
                 ),
-              ).animate().fadeIn().scale(
-                delay: 50.milliseconds,
-                duration: 100.milliseconds,
+              ),
+              
+              // Small indicator dot at outer edge that moves with speed
+              _buildSpeedIndicator(constrainedSize),
+              
+              // Speed value display - clean with no box/background
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Speed value
+                  Text(
+                    speed.toStringAsFixed(1),
+                    style: TextStyle(
+                      fontSize: constrainedSize * 0.22,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ).animate().fadeIn().slideY(
+                    begin: 0.3,
+                    end: 0,
+                    curve: Curves.easeOutQuart,
+                    duration: 150.milliseconds,
+                  ),
+                  // Speed unit
+                  Text(
+                    unit,
+                    style: TextStyle(
+                      fontSize: constrainedSize * 0.08,
+                      color: AppTheme.textSecondaryDark,
+                    ),
+                  ).animate().fadeIn().scale(
+                    delay: 50.milliseconds,
+                    duration: 100.milliseconds,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      }
     );
   }
   
@@ -97,12 +111,12 @@ class Speedometer extends StatelessWidget {
   }
   
   // Build the small indicator dot that moves around the outer edge
-  Widget _buildSpeedIndicator() {
+  Widget _buildSpeedIndicator(double constrainedSize) {
     // Calculate angle based on speed with the gap adjustment
     final double angle = _calculateAngle();
     
     // Calculate position on the outer edge
-    final double radius = size * 0.46; // Position near the edge
+    final double radius = constrainedSize * 0.46; // Position near the edge
     final double x = cos(angle) * radius;
     final double y = sin(angle) * radius;
     
@@ -120,12 +134,16 @@ class Speedometer extends StatelessWidget {
       indicatorColor = Colors.red;
     }
     
+    // Calculate dot size based on constrained size
+    final dotSize = constrainedSize * 0.035;
+    final halfDotSize = dotSize / 2;
+    
     return Positioned(
-      left: size / 2 + x - 5,
-      top: size / 2 + y - 5,
+      left: constrainedSize / 2 + x - halfDotSize,
+      top: constrainedSize / 2 + y - halfDotSize,
       child: Container(
-        width: 10,
-        height: 10,
+        width: dotSize,
+        height: dotSize,
         decoration: BoxDecoration(
           color: indicatorColor,
           shape: BoxShape.circle,
@@ -147,8 +165,8 @@ class Speedometer extends StatelessWidget {
         final double animatedY = sin(animatedAngle) * radius;
         
         return Positioned(
-          left: size / 2 + animatedX - 5,
-          top: size / 2 + animatedY - 5,
+          left: constrainedSize / 2 + animatedX - halfDotSize,
+          top: constrainedSize / 2 + animatedY - halfDotSize,
           child: child!,
         );
       },

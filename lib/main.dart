@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'config/theme.dart';
 import 'screens/menu_screen.dart';
 import 'screens/speedometer_screen.dart';
+import 'screens/acceleration_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -158,6 +159,22 @@ class _MainNavigatorState extends State<MainNavigator> {
       ),
     );
   }
+  
+  void _navigateToAcceleration() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const AccelerationScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutQuart;
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
 
   void _navigateToHistory() {
     Navigator.of(context).push(
@@ -195,6 +212,7 @@ class _MainNavigatorState extends State<MainNavigator> {
   Widget build(BuildContext context) {
     return MenuScreen(
       onSpeedometerTap: _navigateToSpeedometer,
+      onAccelerationTap: _navigateToAcceleration,
       onHistoryTap: _navigateToHistory,
       onSettingsTap: _navigateToSettings,
     );

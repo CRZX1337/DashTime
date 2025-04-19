@@ -24,13 +24,28 @@ class StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size for responsive design
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    
+    // Adjust font sizes based on screen width
+    final titleFontSize = isSmallScreen ? 11.0 : 13.0;
+    final valueFontSize = isSmallScreen ? 18.0 : 20.0;
+    final unitFontSize = isSmallScreen ? 11.0 : 12.0;
+    final iconSize = isSmallScreen ? 18.0 : 22.0;
+    
+    // Adjust padding based on screen size
+    final horizontalPadding = isSmallScreen ? 6.0 : 10.0;
+    final verticalPadding = isSmallScreen ? 4.0 : 6.0;
+    
     return Card(
       elevation: elevation,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
       ),
+      margin: EdgeInsets.zero,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
           gradient: LinearGradient(
@@ -42,81 +57,108 @@ class StatsCard extends StatelessWidget {
             ],
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Title and icon row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Icon(
-                  icon,
-                  color: color,
-                  size: 24,
-                ),
-              ],
-            ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Calculate the max width for value text
+            final maxValueWidth = constraints.maxWidth - iconSize - 10;
             
-            const SizedBox(height: 4),
-            
-            // Value and unit row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  value,
-                  style: const TextStyle(
-                    color: AppTheme.textDark,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                // Title and icon row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Title with overflow protection
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Icon
+                    Icon(
+                      icon,
+                      color: color,
+                      size: iconSize,
+                    ),
+                  ],
+                ),
+                
+                SizedBox(height: isSmallScreen ? 1 : 2),
+                
+                // Value and unit row with better overflow handling
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Value with fixed max width
+                    Flexible(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: maxValueWidth * 0.8,
+                        ),
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            color: AppTheme.textDark,
+                            fontSize: valueFontSize,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ).animate().fadeIn().slideY(
+                          begin: 0.3,
+                          end: 0,
+                          curve: Curves.easeOutQuart,
+                          duration: 300.milliseconds,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    // Unit
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Text(
+                        unit,
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryDark,
+                          fontSize: unitFontSize,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ).animate().fadeIn(delay: 100.milliseconds),
+                  ],
+                ),
+                
+                // Decorative bar at bottom
+                Container(
+                  height: 2,
+                  width: 30,
+                  margin: const EdgeInsets.only(top: 1),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                ).animate().fadeIn().slideY(
-                  begin: 0.3,
+                ).animate().fadeIn().slideX(
+                  begin: -0.2,
                   end: 0,
-                  curve: Curves.easeOutQuart,
+                  delay: 200.milliseconds,
                   duration: 300.milliseconds,
                 ),
-                const SizedBox(width: 4),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    unit,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ).animate().fadeIn(delay: 100.milliseconds),
               ],
-            ),
-            
-            // Decorative bar at bottom
-            Container(
-              height: 2,
-              width: 40,
-              margin: const EdgeInsets.only(top: 2),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ).animate().fadeIn().slideX(
-              begin: -0.2,
-              end: 0,
-              delay: 200.milliseconds,
-              duration: 300.milliseconds,
-            ),
-          ],
+            );
+          }
         ),
       ),
     );
