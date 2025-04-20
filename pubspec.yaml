@@ -41,7 +41,7 @@ dependencies:
   shared_preferences: ^2.2.3
   fl_chart: ^0.71.0
   intl: ^0.20.2
-  flutter_svg: ^2.0.10+1
+  flutter_svg: ^2.1.0
   path_provider: ^2.0.25
   url_launcher: ^6.2.5
   wakelock_plus: ^1.1.4
@@ -68,6 +68,9 @@ dependency_overrides:
   leak_tracker: ^10.0.9
   vm_service: ^15.0.0
   lints: ^6.0.0
+  path_provider_android: ^2.2.17
+  shared_preferences_android: ^2.4.10
+  url_launcher_android: ^6.3.16
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
