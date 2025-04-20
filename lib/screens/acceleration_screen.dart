@@ -33,16 +33,21 @@ class _AccelerationScreenState extends State<AccelerationScreen>
   bool _hasGpsSignal = false;
   bool _isSaving = false;
   bool _showTestHistory = false;
-  
-  // Add a new property to track if target was reached
   bool _targetReached = false;
+  bool _isCalibrating = false;
+  // Add new states for the two calibration phases
+  bool _isGpsCalibrating = false;
+  bool _isWaitingForMovement = false;
+  int _calibrationCountdown = 3; // Seconds to calibrate GPS
+  Timer? _calibrationTimer;
+  double _speedThreshold = 1.0; // Speed threshold to consider actual movement (km/h)
   
   // Acceleration data
   double _currentSpeed = 0.0;
   double _startSpeed = 0.0;
   double _targetSpeed = 100.0; // Default target 0-100
   
-  // Timer
+  // Timer - Optimized for more frequent updates
   Stopwatch _stopwatch = Stopwatch();
   Timer? _updateTimer;
   String _elapsedTimeStr = "00:00.00";
@@ -101,6 +106,7 @@ class _AccelerationScreenState extends State<AccelerationScreen>
   void dispose() {
     _speedSubscription?.cancel();
     _updateTimer?.cancel();
+    _calibrationTimer?.cancel();
     _readyAnimationController.dispose();
     _measureAnimationController.dispose();
     _resultAnimationController.dispose();
@@ -168,6 +174,14 @@ class _AccelerationScreenState extends State<AccelerationScreen>
       _currentSpeed = displaySpeed;
       _hasGpsSignal = _locationService.currentPosition != null;
       
+      // If we're waiting for movement to start the timer
+      if (_isWaitingForMovement && !_isComplete) {
+        if (_currentSpeed >= _speedThreshold) {
+          // Now we're actually moving - start the timer
+          _startTimerAfterMovement();
+        }
+      }
+      
       // If we're measuring and just passed the target speed, complete the measurement
       if (_isMeasuring && !_isComplete) {
         if (_currentSpeed >= _targetSpeed) {
@@ -186,25 +200,66 @@ class _AccelerationScreenState extends State<AccelerationScreen>
     _isComplete = false;
     _targetReached = false;
     
+    // Start GPS calibration phase first
+    setState(() {
+      _isGpsCalibrating = true;
+      _isCalibrating = true;
+      _isWaitingForMovement = false;
+      _isReady = false;
+      _calibrationCountdown = 3;
+    });
+    
+    // Start the GPS calibration countdown
+    _calibrationTimer?.cancel();
+    _calibrationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_calibrationCountdown > 1) {
+          _calibrationCountdown--;
+        } else {
+          // GPS calibration complete, now wait for movement
+          _calibrationTimer?.cancel();
+          _isGpsCalibrating = false;
+          _isWaitingForMovement = true;
+          
+          // If in simulation mode, start the demo movement and skip to measurement
+          if (_locationService.isSimulationMode) {
+            _locationService.startDemoMovement();
+            _startTimerAfterMovement(); // In simulation, start immediately
+          } else {
+            // Show message to start driving
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Calibration complete! Start driving to begin the test'),
+                backgroundColor: AppTheme.primaryColor,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+        }
+      });
+    });
+    
+    _readyAnimationController.reverse();
+    _measureAnimationController.forward();
+  }
+  
+  // New method to start the timer after movement is detected
+  void _startTimerAfterMovement() {
     // Set starting speed
-    _startSpeed = _currentSpeed;
+    _startSpeed = 0.0; // Always consider start speed as 0
     
     // Start measuring
     setState(() {
       _isMeasuring = true;
-      _isReady = false;
+      _isCalibrating = false;
+      _isWaitingForMovement = false;
     });
     
-    // If in simulation mode, start the demo movement
-    if (_locationService.isSimulationMode) {
-      _locationService.startDemoMovement();
-    }
-    
-    // Start the stopwatch
+    // Start the stopwatch now that we're moving
     _stopwatch.start();
     
-    // Start display timer
-    _updateTimer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
+    // Start display timer - updating more frequently (5ms vs 10ms)
+    _updateTimer = Timer.periodic(const Duration(milliseconds: 5), (timer) {
       if (!_isMeasuring || _isComplete) {
         timer.cancel();
         return;
@@ -215,9 +270,6 @@ class _AccelerationScreenState extends State<AccelerationScreen>
         _formatElapsedTime();
       });
     });
-    
-    _readyAnimationController.reverse();
-    _measureAnimationController.forward();
   }
   
   void _completeMeasurement() {
@@ -733,75 +785,283 @@ class _AccelerationScreenState extends State<AccelerationScreen>
                                 ),
                               );
                             },
-                            child: _isMeasuring
+                            child: (_isMeasuring || _isCalibrating)
                                 ? Column(
                                     children: [
-                                      Text(
-                                        'Measuring...',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: AppTheme.textSecondaryDark,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
+                                      // Calibration UI or Test Timer based on current state
+                                      if (_isGpsCalibrating) 
+                                        // GPS Calibration Screen
+                                        Container(
+                                          padding: const EdgeInsets.all(25),
+                                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.cardDark,
+                                            borderRadius: BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                blurRadius: 10,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.gps_fixed,
+                                                color: AppTheme.accentColor,
+                                                size: 48,
+                                              ),
+                                              const SizedBox(height: 16),
+                                              const Text(
+                                                'GPS Calibration',
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.textDark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              const Text(
+                                                'Ensuring accurate speed measurement.\nPlease don\'t move yet.',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: AppTheme.textSecondaryDark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 24),
+                                              // Countdown timer
+                                              Container(
+                                                width: 70,
+                                                height: 70,
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.primaryColor,
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: AppTheme.primaryColor.withOpacity(0.3),
+                                                      blurRadius: 8,
+                                                      spreadRadius: 1,
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    '$_calibrationCountdown',
+                                                    style: const TextStyle(
+                                                      fontSize: 32,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else if (_isWaitingForMovement)
+                                        // Waiting for movement screen
+                                        Container(
+                                          padding: const EdgeInsets.all(25),
+                                          margin: const EdgeInsets.symmetric(horizontal: 10),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.cardDark,
+                                            borderRadius: BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.2),
+                                                blurRadius: 10,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.primaryColor.withOpacity(0.1),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.directions_car,
+                                                  color: AppTheme.primaryColor,
+                                                  size: 48,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              const Text(
+                                                'Ready!',
+                                                style: TextStyle(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppTheme.textDark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              const Text(
+                                                'Start driving to begin the test.\nTimer will start automatically.',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: AppTheme.textSecondaryDark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 24),
+                                              // Current speed indicator
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  const Text(
+                                                    'Current Speed: ',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: AppTheme.textSecondaryDark,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '${_currentSpeed.toStringAsFixed(1)} $speedUnit',
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: AppTheme.primaryColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              // Start movement threshold indicator
+                                              Text(
+                                                '(Test starts at $_speedThreshold $speedUnit)',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontStyle: FontStyle.italic,
+                                                  color: AppTheme.textSecondaryDark,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        // Regular timer display when measuring
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 30,
+                                            vertical: 15,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.cardDark,
+                                            borderRadius: BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.1),
+                                                blurRadius: 8,
+                                                spreadRadius: 1,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
                                             _elapsedTimeStr,
                                             style: const TextStyle(
-                                              fontSize: 36,
+                                              fontSize: 46,
                                               fontWeight: FontWeight.bold,
+                                              fontFamily: 'Monospace',
                                               color: AppTheme.textDark,
-                                              fontFamily: 'monospace',
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 5),
-                                      // Speedometer widget instead of text
-                                      Speedometer(
-                                        speed: _currentSpeed,
-                                        maxSpeed: _targetSpeed.toDouble() * 1.2, // Set max a bit higher than target
-                                        size: speedometerSize,
-                                        unit: speedUnit,
-                                      ),
-                                      const SizedBox(height: 24),
-                                      Container(
-                                        width: 200,
-                                        height: 60,
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(30),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.red.withOpacity(0.3),
-                                              blurRadius: 10,
-                                              spreadRadius: 2,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ],
                                         ),
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            onTap: _completeMeasurement,
+                                        
+                                      const SizedBox(height: 24),
+                                      
+                                      // Speedometer for measuring, hidden during calibration
+                                      if (_isMeasuring)
+                                        RepaintBoundary( // Add RepaintBoundary to isolate frequent updates
+                                          child: Speedometer(
+                                            speed: _currentSpeed,
+                                            maxSpeed: _targetSpeed.toDouble() * 1.2,
+                                            size: speedometerSize,
+                                            unit: speedUnit,
+                                          ),
+                                        ),
+                                        
+                                      const SizedBox(height: 24),
+                                      
+                                      // Control button based on current state
+                                      if (_isMeasuring)
+                                        // Stop button when measuring
+                                        Container(
+                                          width: 200,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
                                             borderRadius: BorderRadius.circular(30),
-                                            child: const Center(
-                                              child: Text(
-                                                'STOP',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 1.5,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.red.withOpacity(0.3),
+                                                blurRadius: 10,
+                                                spreadRadius: 2,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: _completeMeasurement,
+                                              borderRadius: BorderRadius.circular(30),
+                                              child: const Center(
+                                                child: Text(
+                                                  'STOP',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 1.5,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      else if (_isCalibrating)
+                                        // Cancel button during calibration
+                                        Container(
+                                          width: 200,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade700,
+                                            borderRadius: BorderRadius.circular(30),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.3),
+                                                blurRadius: 10,
+                                                spreadRadius: 2,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap: _resetMeasurement,
+                                              borderRadius: BorderRadius.circular(30),
+                                              child: const Center(
+                                                child: Text(
+                                                  'CANCEL',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 1.5,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
                                     ],
                                   )
                                 : const SizedBox.shrink(),

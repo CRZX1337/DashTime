@@ -46,6 +46,11 @@ class LocationService {
   // Recent speed readings for advanced filtering (last 5 readings)
   final Queue<double> _recentSpeedReadings = Queue<double>();
   final int _maxRecentReadings = 5;
+  
+  // Zero-speed calibration values - optimized for responsiveness
+  double _zeroSpeedThreshold = 0.4; // Reduced from 0.8 to make movement more responsive
+  bool _isCalibrated = false;
+  double _zeroOffset = 0.0; // Calibration offset for standing still
 
   // GPS accuracy tracking
   double _currentAccuracy = 0.0; // In meters
@@ -258,23 +263,50 @@ class LocationService {
       _recentSpeedReadings.removeFirst();
     }
     
-    // Apply advanced filtering and smoothing
+    // Apply optimized filtering to remove outliers without excessive smoothing
     double filteredSpeed = _applySpeedFilter(_rawSpeed);
     
-    // Apply adaptive smoothing based on acceleration
-    double smoothingFactor = 0.9; // Increased from 0.8 for more responsiveness
+    // Check if device is stationary based on recent readings
+    bool isLikelyStationary = _isLikelyStationary();
+    
+    // If we're likely stationary and have enough readings, calibrate the zero point
+    if (isLikelyStationary && _recentSpeedReadings.length >= 3) {
+      // Calculate the average of recent readings to use as zero offset
+      double sum = 0;
+      for (double speed in _recentSpeedReadings) {
+        sum += speed;
+      }
+      _zeroOffset = sum / _recentSpeedReadings.length;
+      _isCalibrated = true;
+      print("Zero speed calibrated to offset: $_zeroOffset km/h");
+    }
+    
+    // Apply zero calibration if we're calibrated
+    if (_isCalibrated) {
+      // Apply the offset, ensuring we don't go negative
+      filteredSpeed = math.max(0, filteredSpeed - _zeroOffset);
+      
+      // If speed is below threshold, consider it zero
+      if (filteredSpeed < _zeroSpeedThreshold) {
+        filteredSpeed = 0.0;
+      }
+    }
+    
+    // Apply faster, more responsive smoothing
+    // Much higher smoothing factor for more immediate response to changes
+    double smoothingFactor = 0.95; // Increased from 0.9 for better responsiveness
     
     // If we have enough readings, adjust smoothing factor based on acceleration
-    if (_recentSpeedReadings.length >= 3) {
+    if (_recentSpeedReadings.length >= 2) { // Reduced from 3 to 2 for faster response
       // Calculate rate of change in speed
       List<double> speedList = _recentSpeedReadings.toList();
-      double acceleration = (speedList.last - speedList[speedList.length - 3]).abs();
+      double acceleration = (speedList.last - speedList[speedList.length - 2]).abs(); // Compare with previous reading only
       
-      // More rapid changes get more weight to current reading
-      if (acceleration > 5) {
-        smoothingFactor = 0.95; // Higher weight for more responsive updates
-      } else if (acceleration < 1) {
-        smoothingFactor = 0.8; // Increased from 0.6 for faster updates even when steady
+      // More rapid changes get almost immediate updates
+      if (acceleration > 3) { // Reduced threshold from 5 to 3
+        smoothingFactor = 0.98; // Even higher weight for very responsive updates
+      } else if (acceleration < 0.5) { // Reduced threshold from 1 to 0.5
+        smoothingFactor = 0.9; // Still higher than before (was 0.8)
       }
     }
     
@@ -282,7 +314,7 @@ class LocationService {
     if (_isSimulationMode) {
       _currentSpeed = _simulatedSpeed;
     } else {
-      // Apply the adaptive smoothing
+      // Apply the more responsive smoothing
       if (_currentSpeed == 0) {
         _currentSpeed = filteredSpeed; // First reading
       } else {
@@ -333,10 +365,10 @@ class LocationService {
     _speedController.add(_currentSpeed);
   }
   
-  // Apply median filtering to remove outliers and smooth speed
+  // Apply optimized filtering to remove outliers without excessive smoothing
   double _applySpeedFilter(double rawSpeed) {
-    if (_recentSpeedReadings.length < 3) {
-      return rawSpeed; // Not enough data for filtering
+    if (_recentSpeedReadings.length < 2) {
+      return rawSpeed; // Not enough data for filtering, return raw (was 3)
     }
     
     // Create a sorted copy of recent readings for median calculation
@@ -359,12 +391,15 @@ class LocationService {
     }
     mad /= sortedReadings.length;
     
-    // If the current reading deviates too much from median, adjust it
-    if ((rawSpeed - median).abs() > (mad * 2) && sortedReadings.length >= 3) {
-      // Reading is an outlier, use a weighted combination of median and raw
-      return (median * 0.7) + (rawSpeed * 0.3);
+    // Only filter extreme outliers to maintain responsiveness
+    // Increased threshold from 2 to 3 times MAD to only catch very extreme outliers
+    if ((rawSpeed - median).abs() > (mad * 3) && sortedReadings.length >= 2) {
+      // Reading is an extreme outlier, still give significant weight to raw value
+      // Changed from 0.7/0.3 to 0.5/0.5 to be more responsive
+      return (median * 0.5) + (rawSpeed * 0.5);
     }
     
+    // In most cases, return the raw speed for maximum responsiveness
     return rawSpeed;
   }
 
@@ -927,6 +962,31 @@ class LocationService {
     
     // Apply the change
     _simulatedSpeed += changeAmount;
+  }
+
+  // Optimized method to check if we're likely stationary - more responsive
+  bool _isLikelyStationary() {
+    if (_recentSpeedReadings.length < 2) { // Reduced from 3 to 2
+      return false;
+    }
+    
+    // Calculate the standard deviation of recent readings
+    double mean = 0;
+    for (double speed in _recentSpeedReadings) {
+      mean += speed;
+    }
+    mean /= _recentSpeedReadings.length;
+    
+    double variance = 0;
+    for (double speed in _recentSpeedReadings) {
+      variance += math.pow(speed - mean, 2);
+    }
+    variance /= _recentSpeedReadings.length;
+    double stdDev = math.sqrt(variance);
+    
+    // More lenient stationary detection - increased the mean threshold from 2.0 to 2.5
+    // and standard deviation threshold from 0.5 to 0.7 to avoid false positives
+    return mean < 2.5 && stdDev < 0.7;
   }
 
   // Dispose resources

@@ -216,6 +216,7 @@ class Speedometer extends StatelessWidget {
     
     final halfDotSize = dotSize / 2;
     
+    // Fixed Positioned widget without the nested animation
     return Positioned(
       left: constrainedSize / 2 + x - halfDotSize,
       top: constrainedSize / 2 + y - halfDotSize,
@@ -234,20 +235,6 @@ class Speedometer extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().custom(
-      duration: 150.milliseconds,
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        final animatedAngle = _calculateAngle();
-        final double animatedX = cos(animatedAngle) * radius;
-        final double animatedY = sin(animatedAngle) * radius;
-        
-        return Positioned(
-          left: constrainedSize / 2 + animatedX - halfDotSize,
-          top: constrainedSize / 2 + animatedY - halfDotSize,
-          child: child!,
-        );
-      },
     );
   }
 
