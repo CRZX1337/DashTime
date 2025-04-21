@@ -21,17 +21,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #474747;
+            --bg-color: #222222;
+            --card-bg: #2d2d2d;
+            --dark-card: #1a1a1a;
             --main-color: #b496ff;
             --accent-color: #ff529a;
             --text-color: #ffffff;
             --text-secondary: #e0e0e0;
-            --card-bg: #555555;
             --transition-speed: 0.3s;
             --orange-accent: #ff9100;
             --green-accent: #28ca72;
             --blue-accent: #1e90ff;
             --purple-accent: #b035e0;
+            --header-gradient: linear-gradient(135deg, var(--main-color), var(--accent-color));
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --subtle-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            --card-border-radius: 16px;
+            --button-border-radius: 50px;
         }
         
         /* Preloader Styles */
@@ -138,6 +144,10 @@
             box-sizing: border-box;
         }
         
+        html {
+            scroll-behavior: smooth;
+        }
+        
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
@@ -146,23 +156,29 @@
             overflow-x: hidden;
             -webkit-user-select: none;
             user-select: none;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(rgba(180, 150, 255, 0.05) 2px, transparent 2px),
+                radial-gradient(rgba(255, 82, 154, 0.05) 2px, transparent 2px);
+            background-size: 40px 40px, 40px 40px;
+            background-position: 0 0, 20px 20px;
         }
         
         .container {
-            width: 85%;
+            width: 90%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
         
         header {
-            background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+            background: var(--header-gradient);
             position: relative;
             text-align: center;
-            padding: 5rem 0 7rem;
-            margin-bottom: 5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+            padding: 6rem 0 8rem;
+            margin-bottom: 6rem;
+            box-shadow: var(--card-shadow);
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
         }
         
         header::before {
@@ -178,15 +194,18 @@
         }
         
         h1 {
-            font-size: 4rem;
+            font-size: 4.5rem;
             font-weight: 700;
             margin: 0;
             position: relative;
             z-index: 1;
             letter-spacing: 2px;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
             transform: translateY(0);
             animation: float 6s ease-in-out infinite;
+            background: linear-gradient(to right, var(--text-color), #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         @keyframes float {
@@ -197,15 +216,16 @@
         
         .app-description {
             font-size: 1.5rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             position: relative;
             z-index: 1;
             font-weight: 300;
-            max-width: 600px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
             opacity: 0;
             animation: fadeIn 1s ease-out forwards 0.5s;
+            line-height: 1.4;
         }
         
         @keyframes fadeIn {
@@ -244,9 +264,13 @@
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            gap: 3rem;
-            margin: 5rem 0;
+            gap: 4rem;
+            margin: 6rem 0;
             position: relative;
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--subtle-shadow);
         }
         
         .speedometer-preview {
@@ -261,14 +285,14 @@
             width: 300px;
             height: 300px;
             border-radius: 50%;
-            background-color: #1a1a1a;
+            background-color: var(--dark-card);
             margin: 0 auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--card-shadow);
             opacity: 0;
             transform: scale(0.8);
             transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s;
@@ -298,6 +322,15 @@
             transform: translateX(-50%);
         }
         
+        .speed-indicator {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #28ca72;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(40, 202, 114, 0.5);
+        }
+        
         .speed-value {
             font-size: 4rem;
             font-weight: 700;
@@ -318,14 +351,15 @@
         }
         
         .stat-panel {
-            background-color: #1a1a1a;
-            padding: 1rem;
-            border-radius: 10px;
+            background-color: var(--dark-card);
+            padding: 1.2rem;
+            border-radius: 12px;
             position: relative;
             overflow: hidden;
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.5s ease-out;
+            box-shadow: var(--subtle-shadow);
         }
         
         .max-speed {
@@ -369,12 +403,20 @@
             opacity: 0;
             transform: translateX(30px);
             transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            padding: 2rem;
+            background: var(--dark-card);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--subtle-shadow);
         }
         
         .download-section {
             text-align: center;
-            margin: 4rem 0 6rem;
+            margin: 5rem 0 7rem;
             position: relative;
+            padding: 3rem;
+            background-color: var(--card-bg);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--subtle-shadow);
         }
         
         .download-section::before {
@@ -420,14 +462,15 @@
         }
         
         .download-card {
-            background-color: var(--card-bg);
-            border-radius: 15px;
-            padding: 2rem;
+            background-color: var(--dark-card);
+            border-radius: var(--card-border-radius);
+            padding: 2.5rem;
             width: 280px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--card-shadow);
             transition: transform var(--transition-speed), box-shadow var(--transition-speed);
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .download-card::before {
@@ -459,10 +502,10 @@
         
         .download-button {
             display: inline-block;
-            background: linear-gradient(45deg, var(--main-color), var(--accent-color));
+            background: var(--header-gradient);
             color: white;
-            padding: 1rem 2rem;
-            border-radius: 50px;
+            padding: 1.2rem 2.5rem;
+            border-radius: var(--button-border-radius);
             text-decoration: none;
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(180, 150, 255, 0.4);
@@ -470,6 +513,7 @@
             position: relative;
             z-index: 1;
             overflow: hidden;
+            letter-spacing: 0.5px;
         }
         
         .download-button::before {
@@ -551,15 +595,16 @@
         
         .settings-showcase {
             background-color: var(--card-bg);
-            border-radius: 20px;
-            padding: 3rem;
-            margin: 4rem 0;
+            border-radius: var(--card-border-radius);
+            padding: 4rem;
+            margin: 5rem 0;
             position: relative;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--card-shadow);
             overflow: hidden;
             opacity: 0;
             transform: translateY(40px);
             transition: opacity 1s ease-out, transform 1s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .settings-showcase h2 {
@@ -584,15 +629,16 @@
         }
         
         .setting-item {
-            background-color: #1a1a1a;
-            padding: 1rem;
-            border-radius: 10px;
+            background-color: var(--dark-card);
+            padding: 1.2rem;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             opacity: 0;
             transform: translateX(-20px);
             transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            box-shadow: var(--subtle-shadow);
         }
         
         .setting-item:nth-child(1) {
@@ -637,16 +683,17 @@
         
         footer {
             text-align: center;
-            padding: 3rem 0;
+            padding: 4rem 0;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            background-color: rgba(0, 0, 0, 0.2);
+            font-size: 0.95rem;
+            background-color: var(--card-bg);
             position: relative;
-            margin-top: 3rem;
+            margin-top: 5rem;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.6s ease-out, transform 0.6s ease-out;
             transition-delay: 0.8s;
+            border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
         }
         
         footer::before {
@@ -655,8 +702,8 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--main-color), transparent);
+            height: 3px;
+            background: var(--header-gradient);
         }
         
         .social-links {
@@ -668,22 +715,45 @@
         
         .social-links a {
             color: var(--text-secondary);
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             transition: color var(--transition-speed), transform var(--transition-speed);
+            padding: 0.5rem;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.05);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .social-links a:hover {
             color: var(--main-color);
-            transform: translateY(-3px);
+            transform: translateY(-5px);
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         @media (max-width: 768px) {
             header {
-                padding: 3rem 0 5rem;
+                padding: 4rem 0 6rem;
             }
             
             h1 {
-                font-size: 3rem;
+                font-size: 3.5rem;
+            }
+            
+            .container {
+                width: 92%;
+                padding: 1.5rem;
+            }
+            
+            .app-showcase {
+                padding: 1.5rem;
+                gap: 3rem;
+            }
+            
+            .settings-showcase {
+                padding: 2.5rem;
             }
             
             .download-buttons {
@@ -693,6 +763,11 @@
             .download-card {
                 width: 100%;
                 max-width: 350px;
+                padding: 2rem;
+            }
+            
+            .download-section {
+                padding: 2rem;
             }
             
             /* Improved touch targets */
@@ -782,11 +857,11 @@
             }
             
             header {
-                padding: 2rem 0 4rem;
+                padding: 3rem 0 5rem;
             }
             
             h1 {
-                font-size: 2.5rem;
+                font-size: 2.8rem;
             }
             
             .app-description {
@@ -825,11 +900,20 @@
             }
             
             .setting-item {
-                padding: 0.75rem;
+                padding: 1rem;
             }
             
             .app-showcase {
                 gap: 2rem;
+                padding: 1rem;
+            }
+            
+            .app-features {
+                padding: 1.5rem;
+            }
+            
+            .download-section {
+                padding: 1.5rem;
             }
         }
         
@@ -861,7 +945,9 @@
         .animate-on-scroll {
             opacity: 0;
             transform: translateY(30px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transition: opacity 0.8s cubic-bezier(0.215, 0.61, 0.355, 1), 
+                        transform 0.8s cubic-bezier(0.215, 0.61, 0.355, 1);
+            will-change: opacity, transform;
         }
         
         .animate-on-scroll.visible {
@@ -869,7 +955,7 @@
             transform: translateY(0);
         }
 
-        /* Landing animations for main content */
+        /* Landing animations for main content with improved easing */
         .animate-in {
             opacity: 1;
             transform: translateY(0) scale(1) translateX(0);
@@ -1217,6 +1303,66 @@
             -webkit-user-select: text;
             user-select: text;
         }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            animation: fadeIn 1s ease-out forwards 0.7s;
+        }
+        
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--button-border-radius);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--text-color);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .nav-links a:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+            
+            .nav-links a {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1237,33 +1383,40 @@
         <div class="container">
             <h1>DashTime</h1>
             <div class="app-description">Advanced GPS Speedometer & Speed Tracker</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#settings">Settings</a>
+                <a href="#download">Download</a>
+                <a href="https://github.com/CRZX1337/DashTime" target="_blank">GitHub</a>
+            </div>
         </div>
     </header>
 
     <div class="container">
         <div class="app-showcase" id="features">
             <div class="speedometer-preview animate-on-scroll">
-                <div class="speedometer-circle">
-                    <div class="speed-value">0.0</div>
+                <div class="speedometer-circle" id="speedometerCircle">
+                    <div class="speed-value" id="speedValue">0.0</div>
                     <div class="speed-unit">km/h</div>
+                    <div class="speed-indicator" id="speedIndicator"></div>
                 </div>
                 
                 <div class="stats-panels">
                     <div class="stat-panel max-speed">
                         <div class="stat-title">MAX SPEED</div>
-                        <div class="stat-value">0.0 <span class="stat-unit">km/h</span></div>
+                        <div class="stat-value"><span id="maxSpeedValue">0.0</span> <span class="stat-unit">km/h</span></div>
                     </div>
                     <div class="stat-panel avg-speed">
                         <div class="stat-title">AVG SPEED</div>
-                        <div class="stat-value">0.0 <span class="stat-unit">km/h</span></div>
+                        <div class="stat-value"><span id="avgSpeedValue">0.0</span> <span class="stat-unit">km/h</span></div>
                     </div>
                     <div class="stat-panel distance">
                         <div class="stat-title">DISTANCE</div>
-                        <div class="stat-value">0 <span class="stat-unit">m</span></div>
+                        <div class="stat-value"><span id="distanceValue">0</span> <span class="stat-unit">m</span></div>
                     </div>
                     <div class="stat-panel time">
                         <div class="stat-title">TIME</div>
-                        <div class="stat-value">00:00 <span class="stat-unit">min</span></div>
+                        <div class="stat-value"><span id="timeValue">00:00</span> <span class="stat-unit">min</span></div>
                     </div>
                 </div>
             </div>
@@ -1837,6 +1990,280 @@
                     behavior: 'smooth'
                 });
             });
+        });
+
+        // Interactive Speedometer Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const speedometerCircle = document.getElementById('speedometerCircle');
+            const speedValue = document.getElementById('speedValue');
+            const speedIndicator = document.getElementById('speedIndicator');
+            const maxSpeedValue = document.getElementById('maxSpeedValue');
+            const avgSpeedValue = document.getElementById('avgSpeedValue');
+            const distanceValue = document.getElementById('distanceValue');
+            const timeValue = document.getElementById('timeValue');
+            
+            // Configuration
+            const maxSpeed = 180.0;
+            let currentSpeed = 0.0;
+            let currentMaxSpeed = 0.0;
+            let currentAvgSpeed = 0.0;
+            let currentDistance = 0;
+            let elapsedSeconds = 0;
+            let isAnimating = false;
+            let animationInterval;
+            let timeInterval;
+            
+            // Initialize speedometer arc
+            if (speedometerCircle) {
+                createSpeedometerArc();
+                positionSpeedIndicator(0);
+                
+                // Start animation when the speedometer is in view
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && !isAnimating) {
+                            startSpeedometerAnimation();
+                        } else if (!entry.isIntersecting && isAnimating) {
+                            stopSpeedometerAnimation();
+                        }
+                    });
+                }, { threshold: 0.3 });
+                
+                observer.observe(speedometerCircle);
+            }
+            
+            // Create speedometer arc using SVG
+            function createSpeedometerArc() {
+                // Create SVG element
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("width", "300");
+                svg.setAttribute("height", "300");
+                svg.style.position = "absolute";
+                svg.style.top = "0";
+                svg.style.left = "0";
+                
+                // Create background arc
+                const backgroundArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                backgroundArc.setAttribute("d", describeArc(150, 150, 145, 0, 359.9));
+                backgroundArc.setAttribute("stroke", "#333");
+                backgroundArc.setAttribute("stroke-width", "10");
+                backgroundArc.setAttribute("fill", "none");
+                backgroundArc.setAttribute("stroke-linecap", "round");
+                
+                // Create foreground arc (speedometer progress)
+                const foregroundArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                foregroundArc.setAttribute("id", "speedArc");
+                foregroundArc.setAttribute("d", describeArc(150, 150, 145, 0, 0));
+                foregroundArc.setAttribute("stroke", "url(#speedGradient)");
+                foregroundArc.setAttribute("stroke-width", "10");
+                foregroundArc.setAttribute("fill", "none");
+                foregroundArc.setAttribute("stroke-linecap", "round");
+                
+                // Create gradient
+                const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+                gradient.setAttribute("id", "speedGradient");
+                gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+                gradient.setAttribute("x1", "0");
+                gradient.setAttribute("y1", "0");
+                gradient.setAttribute("x2", "300");
+                gradient.setAttribute("y2", "300");
+                
+                // Gradient stops
+                const stops = [
+                    { offset: "0%", color: "#28ca72" },
+                    { offset: "40%", color: "#ffff00" },
+                    { offset: "60%", color: "#ff9100" },
+                    { offset: "80%", color: "#ff0000" },
+                    { offset: "100%", color: "#ff0000" }
+                ];
+                
+                stops.forEach(stop => {
+                    const stopElement = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+                    stopElement.setAttribute("offset", stop.offset);
+                    stopElement.setAttribute("stop-color", stop.color);
+                    gradient.appendChild(stopElement);
+                });
+                
+                // Append elements to SVG
+                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+                defs.appendChild(gradient);
+                svg.appendChild(defs);
+                svg.appendChild(backgroundArc);
+                svg.appendChild(foregroundArc);
+                
+                // Insert SVG into speedometer
+                speedometerCircle.insertBefore(svg, speedometerCircle.firstChild);
+            }
+            
+            // SVG arc description function
+            function describeArc(x, y, radius, startAngle, endAngle) {
+                const start = polarToCartesian(x, y, radius, endAngle);
+                const end = polarToCartesian(x, y, radius, startAngle);
+                const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+                return [
+                    "M", start.x, start.y, 
+                    "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+                ].join(" ");
+            }
+            
+            // Convert polar coordinates to cartesian
+            function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+                const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+                return {
+                    x: centerX + (radius * Math.cos(angleInRadians)),
+                    y: centerY + (radius * Math.sin(angleInRadians))
+                };
+            }
+            
+            // Position the speed indicator dot
+            function positionSpeedIndicator(speed) {
+                if (!speedIndicator) return;
+                
+                // Calculate angle based on speed (map speed to angle)
+                const normalizedSpeed = Math.min(speed, maxSpeed);
+                const ratio = normalizedSpeed / maxSpeed;
+                const angle = ratio * 359.9;
+                
+                // Convert angle to position on the circle
+                const radius = 145; // Same as arc radius
+                const centerX = 150;
+                const centerY = 150;
+                const radians = (angle - 90) * Math.PI / 180.0;
+                
+                // Calculate position
+                const x = centerX + (radius * Math.cos(radians));
+                const y = centerY + (radius * Math.sin(radians));
+                
+                // Position the indicator
+                speedIndicator.style.left = `${x - 5}px`; // -5 to center the 10px dot
+                speedIndicator.style.top = `${y - 5}px`;
+                
+                // Set color based on speed
+                let color;
+                if (ratio < 0.3) {
+                    color = "#28ca72"; // Green
+                } else if (ratio < 0.6) {
+                    color = "#ffff00"; // Yellow
+                } else if (ratio < 0.8) {
+                    color = "#ff9100"; // Orange
+                } else {
+                    color = "#ff0000"; // Red
+                }
+                
+                speedIndicator.style.backgroundColor = color;
+                speedIndicator.style.boxShadow = `0 0 5px ${color}`;
+            }
+            
+            // Update speedometer arc based on speed
+            function updateSpeedometerArc(speed) {
+                const normalizedSpeed = Math.min(speed, maxSpeed);
+                const ratio = normalizedSpeed / maxSpeed;
+                const angle = ratio * 359.9;
+                
+                const speedArc = document.getElementById('speedArc');
+                if (speedArc) {
+                    speedArc.setAttribute("d", describeArc(150, 150, 145, 0, angle));
+                }
+            }
+            
+            // Format time display (MM:SS)
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = seconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Start the animation sequence
+            function startSpeedometerAnimation() {
+                if (isAnimating) return;
+                isAnimating = true;
+                
+                // Reset values
+                currentSpeed = 0.0;
+                currentMaxSpeed = 0.0;
+                currentAvgSpeed = 0.0;
+                currentDistance = 0;
+                elapsedSeconds = 0;
+                
+                // Update time display
+                timeValue.textContent = formatTime(elapsedSeconds);
+                
+                // Start time counter
+                timeInterval = setInterval(() => {
+                    elapsedSeconds++;
+                    timeValue.textContent = formatTime(elapsedSeconds);
+                }, 1000);
+                
+                // Animation sequence
+                const speedSequence = [
+                    { target: 0, duration: 1000 },
+                    { target: 15, duration: 3000 },
+                    { target: 45, duration: 5000 },
+                    { target: 75, duration: 4000 },
+                    { target: 95, duration: 3000 },
+                    { target: 65, duration: 4000 },
+                    { target: 35, duration: 5000 },
+                    { target: 10, duration: 4000 },
+                    { target: 0, duration: 3000 }
+                ];
+                
+                let sequenceIndex = 0;
+                
+                // Start animation interval
+                animationInterval = setInterval(() => {
+                    const currentTarget = speedSequence[sequenceIndex];
+                    
+                    // Smooth transition to target speed
+                    const speedDifference = currentTarget.target - currentSpeed;
+                    const increment = speedDifference * 0.05;
+                    
+                    // Update current speed with smooth animation
+                    currentSpeed += increment;
+                    
+                    // Round for display
+                    const displaySpeed = currentSpeed.toFixed(1);
+                    speedValue.textContent = displaySpeed;
+                    
+                    // Update max speed
+                    if (currentSpeed > currentMaxSpeed) {
+                        currentMaxSpeed = currentSpeed;
+                        maxSpeedValue.textContent = currentMaxSpeed.toFixed(1);
+                    }
+                    
+                    // Update avg speed (simple calculation)
+                    currentAvgSpeed = (currentAvgSpeed * 0.95) + (currentSpeed * 0.05);
+                    avgSpeedValue.textContent = currentAvgSpeed.toFixed(1);
+                    
+                    // Update distance
+                    // Simple approximation: distance += speed (km/h) / 3.6 (to m/s) * 0.1 (100ms)
+                    currentDistance += (currentSpeed / 3.6) * 0.1;
+                    distanceValue.textContent = Math.floor(currentDistance);
+                    
+                    // Update visuals
+                    updateSpeedometerArc(currentSpeed);
+                    positionSpeedIndicator(currentSpeed);
+                    
+                    // Check if we've reached the target (with small threshold)
+                    if (Math.abs(currentSpeed - currentTarget.target) < 0.5) {
+                        sequenceIndex++;
+                        
+                        // If we've completed the sequence, restart
+                        if (sequenceIndex >= speedSequence.length) {
+                            sequenceIndex = 0;
+                        }
+                    }
+                }, 100);
+            }
+            
+            // Stop the animation
+            function stopSpeedometerAnimation() {
+                if (!isAnimating) return;
+                isAnimating = false;
+                
+                clearInterval(animationInterval);
+                clearInterval(timeInterval);
+            }
         });
     </script>
 </body>
