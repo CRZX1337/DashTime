@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, viewport-fit=cover">
     <meta name="description" content="DashTime - Advanced GPS Speedometer & Speed Tracker application for Android">
-    <meta name="theme-color" content="#474747">
+    <meta name="theme-color" content="#222222">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>DashTime - GPS Speedometer</title>
@@ -33,7 +33,7 @@
             --green-accent: #28ca72;
             --blue-accent: #1e90ff;
             --purple-accent: #b035e0;
-            --header-gradient: linear-gradient(135deg, var(--main-color), var(--accent-color));
+            --header-gradient: linear-gradient(120deg, #b496ff, #ff529a);
             --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             --subtle-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             --card-border-radius: 16px;
@@ -162,6 +162,8 @@
                 radial-gradient(rgba(255, 82, 154, 0.05) 2px, transparent 2px);
             background-size: 40px 40px, 40px 40px;
             background-position: 0 0, 20px 20px;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none;
         }
         
         .container {
@@ -329,6 +331,7 @@
             background-color: #28ca72;
             border-radius: 50%;
             box-shadow: 0 0 5px rgba(40, 202, 114, 0.5);
+            z-index: 2;
         }
         
         .speed-value {
@@ -1313,33 +1316,34 @@
             z-index: 1;
             opacity: 0;
             animation: fadeIn 1s ease-out forwards 0.7s;
+            flex-wrap: wrap;
         }
         
         .nav-links a {
             color: var(--text-color);
             text-decoration: none;
             padding: 0.8rem 1.5rem;
-            border-radius: var(--button-border-radius);
+            border-radius: 50px;
             font-weight: 500;
             transition: all 0.3s ease;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.15);
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
+            min-width: 110px;
+            text-align: center;
         }
         
         .nav-links a::before {
             content: '';
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 2px;
-            background-color: var(--text-color);
-            transform: scaleX(0);
-            transform-origin: right;
-            transition: transform 0.3s ease;
+            height: 100%;
+            background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            border-radius: 50px;
         }
         
         .nav-links a:hover {
@@ -1356,11 +1360,278 @@
             .nav-links {
                 flex-wrap: wrap;
                 gap: 0.75rem;
+                margin-top: 2.5rem;
             }
             
             .nav-links a {
-                padding: 0.6rem 1rem;
+                padding: 0.8rem 1.2rem;
+                font-size: 0.95rem;
+                border-radius: 50px;
+                background-color: rgba(255, 255, 255, 0.2);
+                min-width: 110px;
+                text-align: center;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            }
+            
+            .app-features {
+                flex: 1 1 100%;
+                order: 2;
+            }
+            
+            .speedometer-preview {
+                flex: 1 1 100%;
+                order: 1;
+            }
+            
+            .container {
+                padding: 1.5rem 1rem;
+            }
+            
+            /* Add larger touch targets for buttons */
+            .download-button,
+            .setting-item,
+            .social-links a,
+            .nav-links a,
+            .view-full-changelog,
+            .changelog-modal-close,
+            .download-popup-close,
+            .back-to-top {
+                min-height: 44px;
+                min-width: 44px;
+                -webkit-tap-highlight-color: rgba(180, 150, 255, 0.15);
+                touch-action: manipulation;
+            }
+            
+            /* Apply momentum scrolling */
+            .app-showcase,
+            .settings-showcase,
+            .changelog-container,
+            .changelog-modal {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Add active state feedback for touch */
+            .download-button:active,
+            .nav-links a:active,
+            .social-links a:active,
+            .back-to-top:active {
+                transform: scale(0.96);
+                opacity: 0.9;
+            }
+            
+            /* Optimize download buttons for mobile */
+            .download-button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1rem 1.8rem;
+            }
+            
+            .download-button i {
+                margin-right: 8px;
+            }
+        }
+
+        /* Mobile-specific speedometer fixes */
+        @media (max-width: 768px) {
+            .speedometer-circle svg {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            .speedometer-circle {
+                position: relative;
+                width: 280px;
+                height: 280px;
+            }
+            
+            .speed-indicator {
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links a {
+                min-width: 100px;
+                padding: 0.7rem 1rem;
                 font-size: 0.9rem;
+            }
+            
+            .speedometer-circle {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .speed-value {
+                font-size: 3.5rem;
+            }
+            
+            .app-showcase {
+                margin: 3rem 0;
+                padding: 1.2rem 0.8rem;
+                border-radius: 12px;
+                gap: 1.5rem;
+            }
+            
+            .stats-panels {
+                max-width: 300px;
+                margin: 1.5rem auto;
+            }
+            
+            .stat-panel {
+                padding: 0.8rem;
+            }
+            
+            .download-card {
+                padding: 1.5rem;
+            }
+            
+            .download-button {
+                padding: 0.8rem 1.5rem;
+                width: 100%;
+            }
+            
+            .settings-showcase h2,
+            .download-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Improve landscape orientation fixes */
+        @media (max-width: 900px) and (orientation: landscape) {
+            header {
+                padding: 2rem 0 3rem;
+                margin-bottom: 3rem;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .app-description {
+                font-size: 1.1rem;
+                margin-top: 0.5rem;
+            }
+            
+            .nav-links {
+                margin-top: 1rem;
+            }
+            
+            .speedometer-circle {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .speed-value {
+                font-size: 2.8rem;
+            }
+            
+            .speed-unit {
+                font-size: 1.2rem;
+                margin-top: -10px;
+            }
+            
+            .stats-panels {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 0.5rem;
+                max-width: 90%;
+                margin: 1rem auto;
+            }
+            
+            .stat-title {
+                font-size: 0.8rem;
+            }
+            
+            .stat-value {
+                font-size: 1.1rem;
+            }
+            
+            .stat-unit {
+                font-size: 0.8rem;
+            }
+            
+            .app-showcase {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 1rem;
+                margin: 2rem 0;
+            }
+            
+            .download-buttons {
+                flex-direction: row;
+            }
+            
+            .settings-showcase {
+                padding: 1.5rem;
+            }
+            
+            .settings-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 380px) {
+            .speedometer-circle {
+                width: 220px;
+                height: 220px;
+            }
+            
+            .speed-value {
+                font-size: 3rem;
+            }
+            
+            .stats-panels {
+                gap: 0.5rem;
+            }
+            
+            .nav-links a {
+                min-width: auto;
+                flex: 1 1 calc(50% - 0.5rem);
+                padding: 0.6rem 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .nav-links {
+                justify-content: space-between;
+                width: 100%;
+                gap: 0.5rem;
+            }
+            
+            .download-card {
+                padding: 1.2rem;
+            }
+            
+            .download-button {
+                padding: 0.7rem 1rem;
+            }
+            
+            .stat-panel {
+                padding: 0.7rem;
+            }
+            
+            .stat-value {
+                font-size: 1rem;
+            }
+            
+            .social-links a {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Fix for devices with notches and dynamic island */
+        @media screen and (max-width: 430px) and (min-height: 800px) {
+            header {
+                padding-top: 4rem;
             }
         }
     </style>
@@ -2013,11 +2284,24 @@
             let isAnimating = false;
             let animationInterval;
             let timeInterval;
+            let resizeTimeout;
             
             // Initialize speedometer arc
             if (speedometerCircle) {
                 createSpeedometerArc();
                 positionSpeedIndicator(0);
+                
+                // Handle window resize events for mobile rotation
+                window.addEventListener('resize', function() {
+                    // Use debouncing to prevent too many updates
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(function() {
+                        if (isAnimating) {
+                            // Update the indicator position with current speed
+                            positionSpeedIndicator(currentSpeed);
+                        }
+                    }, 250);
+                });
                 
                 // Start animation when the speedometer is in view
                 const observer = new IntersectionObserver((entries) => {
@@ -2037,11 +2321,12 @@
             function createSpeedometerArc() {
                 // Create SVG element
                 const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svg.setAttribute("width", "300");
-                svg.setAttribute("height", "300");
+                svg.setAttribute("viewBox", "0 0 300 300");
                 svg.style.position = "absolute";
                 svg.style.top = "0";
                 svg.style.left = "0";
+                svg.style.width = "100%";
+                svg.style.height = "100%";
                 
                 // Create background arc
                 const backgroundArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -2135,9 +2420,37 @@
                 const x = centerX + (radius * Math.cos(radians));
                 const y = centerY + (radius * Math.sin(radians));
                 
-                // Position the indicator
-                speedIndicator.style.left = `${x - 5}px`; // -5 to center the 10px dot
-                speedIndicator.style.top = `${y - 5}px`;
+                // Get dimensions for proper positioning
+                const circleRect = speedometerCircle.getBoundingClientRect();
+                const svgSize = circleRect.width;
+                const scale = svgSize / 300; // 300 is the SVG viewBox size
+                
+                // Position the indicator with proper scaling
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile) {
+                    // Mobile positioning uses transform for better precision
+                    speedIndicator.style.left = "50%";
+                    speedIndicator.style.top = "50%";
+                    const translateX = ((x - 150) * scale);
+                    const translateY = ((y - 150) * scale);
+                    speedIndicator.style.transform = `translate(${translateX}px, ${translateY}px)`;
+                    // Ensure indicator size scales properly on mobile
+                    const dotSize = Math.max(8, Math.min(12, svgSize * 0.04)); // between 8-12px based on screen size
+                    speedIndicator.style.width = `${dotSize}px`;
+                    speedIndicator.style.height = `${dotSize}px`;
+                    speedIndicator.style.marginLeft = `-${dotSize/2}px`;
+                    speedIndicator.style.marginTop = `-${dotSize/2}px`;
+                } else {
+                    // Desktop positioning
+                    speedIndicator.style.left = `${x * scale - 5}px`;
+                    speedIndicator.style.top = `${y * scale - 5}px`;
+                    speedIndicator.style.transform = 'none';
+                    speedIndicator.style.width = '10px';
+                    speedIndicator.style.height = '10px';
+                    speedIndicator.style.marginLeft = '0';
+                    speedIndicator.style.marginTop = '0';
+                }
                 
                 // Set color based on speed
                 let color;
