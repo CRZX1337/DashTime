@@ -62,6 +62,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _showOnboarding = true;
   bool _initialized = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -77,6 +78,15 @@ class _MyAppState extends State<MyApp> {
       _showOnboarding = !onboardingComplete;
       _initialized = true;
     });
+    
+    // Show loading screen for a brief period on every launch
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   void _onOnboardingComplete() {
@@ -91,11 +101,11 @@ class _MyAppState extends State<MyApp> {
       title: 'DashTime GPS Speedometer',
       theme: AppTheme.darkTheme(),
       debugShowCheckedModeBanner: false,
-      home: _initialized 
-          ? (_showOnboarding 
+      home: !_initialized || _isLoading
+          ? const LoadingScreen()
+          : (_showOnboarding 
               ? OnboardingScreen(onComplete: _onOnboardingComplete)
-              : const MainNavigator())
-          : const LoadingScreen(),
+              : const MainNavigator()),
       builder: (context, child) {
         // Add responsive sizing and orientation support
         final mediaQuery = MediaQuery.of(context);
@@ -130,11 +140,77 @@ class LoadingScreen extends StatelessWidget {
               Icons.speed_rounded,
               size: 80,
               color: AppTheme.primaryColor,
-            ).animate().scale(duration: 600.ms),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(
-              color: AppTheme.primaryColor,
+            )
+            .animate(onPlay: (controller) => controller.repeat(reverse: true))
+            .slideY(
+              begin: -0.2, 
+              end: 0.2, 
+              duration: 1.5.seconds,
+              curve: Curves.easeInOutCubic
+            )
+            .shimmer(
+              duration: 1.8.seconds,
+              color: AppTheme.accentColor,
+              delay: 400.ms
             ),
+            const SizedBox(height: 32),
+            const Text(
+              'DashTime',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textDark,
+              ),
+            )
+            .animate()
+            .fadeIn(duration: 800.ms)
+            .slideX(begin: -0.2, end: 0, duration: 600.ms, curve: Curves.easeOutCubic),
+            const SizedBox(height: 40),
+            Container(
+              width: 160,
+              height: 4,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.white.withOpacity(0.08),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return Stack(
+                    children: [
+                      Animate(
+                        effects: [
+                          SlideEffect(
+                            begin: const Offset(-0.5, 0),
+                            end: const Offset(1.5, 0),
+                            duration: 2.seconds,
+                            curve: Curves.easeInOutCubic,
+                          ),
+                        ],
+                        onComplete: (controller) => controller.repeat(),
+                        child: Container(
+                          width: constraints.maxWidth * 0.5,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryColor.withOpacity(0.5),
+                                AppTheme.primaryColor,
+                                AppTheme.accentColor,
+                                AppTheme.accentColor.withOpacity(0.5),
+                              ],
+                              stops: const [0.0, 0.3, 0.7, 1.0],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            )
+            .animate()
+            .fadeIn(delay: 300.ms, duration: 700.ms),
           ],
         ),
       ),
