@@ -38,6 +38,33 @@
             --subtle-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             --card-border-radius: 16px;
             --button-border-radius: 50px;
+            --glow-main: 0 0 20px rgba(180, 150, 255, 0.4);
+            --glow-accent: 0 0 20px rgba(255, 82, 154, 0.4);
+            --glow-orange: 0 0 15px rgba(255, 145, 0, 0.4);
+            --glow-green: 0 0 15px rgba(40, 202, 114, 0.4);
+            --glow-blue: 0 0 15px rgba(30, 144, 255, 0.4);
+            --glow-purple: 0 0 15px rgba(176, 53, 224, 0.4);
+        }
+        
+        /* Animated gradient background */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Pulsating glow animation */
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 5px rgba(180, 150, 255, 0.1); }
+            50% { box-shadow: 0 0 20px rgba(180, 150, 255, 0.3); }
+            100% { box-shadow: 0 0 5px rgba(180, 150, 255, 0.1); }
+        }
+        
+        /* Breathing glow for accent elements */
+        @keyframes breatheGlow {
+            0% { box-shadow: 0 0 10px rgba(255, 82, 154, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(255, 82, 154, 0.4); }
+            100% { box-shadow: 0 0 10px rgba(255, 82, 154, 0.2); }
         }
         
         /* Preloader Styles */
@@ -175,6 +202,8 @@
         
         header {
             background: var(--header-gradient);
+            background-size: 200% 200%;
+            animation: gradientAnimation 15s ease infinite;
             position: relative;
             text-align: center;
             padding: 6rem 0 8rem;
@@ -203,16 +232,23 @@
             z-index: 1;
             letter-spacing: 2px;
             text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            transform: translateY(0);
-            animation: float 6s ease-in-out infinite;
             background: linear-gradient(to right, var(--text-color), #e0e0e0);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: floatAnimation 6s ease-in-out infinite, textGlow 5s ease-in-out infinite;
         }
         
-        @keyframes float {
+        /* Text glow animation */
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
+            50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(180, 150, 255, 0.4); }
+            100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.3); }
+        }
+        
+        /* New floating animation for the logo and description */
+        @keyframes floatAnimation {
             0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-15px); }
             100% { transform: translateY(0px); }
         }
         
@@ -294,10 +330,11 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            box-shadow: var(--card-shadow);
+            box-shadow: var(--card-shadow), var(--glow-main);
             opacity: 0;
             transform: scale(0.8);
-            transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s;
+            transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s, box-shadow 0.5s ease-out;
+            animation: glowPulse 5s infinite;
         }
         
         .speedometer-circle::before {
@@ -363,6 +400,7 @@
             transform: translateY(20px);
             transition: all 0.5s ease-out;
             box-shadow: var(--subtle-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
         .max-speed {
@@ -370,9 +408,17 @@
             transition-delay: 0.4s;
         }
         
+        .stat-panel.max-speed {
+            box-shadow: var(--glow-orange);
+        }
+        
         .avg-speed {
             border-left: 3px solid var(--green-accent);
             transition-delay: 0.6s;
+        }
+        
+        .stat-panel.avg-speed {
+            box-shadow: var(--glow-green);
         }
         
         .distance {
@@ -380,9 +426,17 @@
             transition-delay: 0.8s;
         }
         
+        .stat-panel.distance {
+            box-shadow: var(--glow-blue);
+        }
+        
         .time {
             border-left: 3px solid var(--purple-accent);
             transition-delay: 1.0s;
+        }
+        
+        .stat-panel.time {
+            box-shadow: var(--glow-purple);
         }
         
         .stat-title {
@@ -419,7 +473,7 @@
             padding: 3rem;
             background-color: var(--card-bg);
             border-radius: var(--card-border-radius);
-            box-shadow: var(--subtle-shadow);
+            box-shadow: var(--subtle-shadow), var(--glow-main);
         }
         
         .download-section::before {
@@ -435,6 +489,13 @@
             border-radius: 50%;
             filter: blur(40px);
             z-index: -1;
+            animation: pulseBackground 5s ease-in-out infinite;
+        }
+        
+        @keyframes pulseBackground {
+            0% { opacity: 0.05; transform: translateX(-50%) scale(0.8); }
+            50% { opacity: 0.15; transform: translateX(-50%) scale(1.2); }
+            100% { opacity: 0.05; transform: translateX(-50%) scale(0.8); }
         }
         
         .download-title {
@@ -506,17 +567,24 @@
         .download-button {
             display: inline-block;
             background: var(--header-gradient);
+            background-size: 200% 200%;
+            animation: gradientAnimation 10s ease infinite;
             color: white;
             padding: 1.2rem 2.5rem;
             border-radius: var(--button-border-radius);
             text-decoration: none;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(180, 150, 255, 0.4);
+            box-shadow: var(--glow-main);
             transition: transform var(--transition-speed), box-shadow var(--transition-speed), background var(--transition-speed);
             position: relative;
             z-index: 1;
             overflow: hidden;
             letter-spacing: 0.5px;
+        }
+        
+        .download-button:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--glow-main), var(--glow-accent);
         }
         
         .download-button::before {
@@ -531,11 +599,6 @@
             opacity: 0;
             transition: opacity var(--transition-speed);
             border-radius: 50px;
-        }
-        
-        .download-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(180, 150, 255, 0.6);
         }
         
         .download-button:hover::before {
@@ -602,7 +665,7 @@
             padding: 4rem;
             margin: 5rem 0;
             position: relative;
-            box-shadow: var(--card-shadow);
+            box-shadow: var(--card-shadow), var(--glow-main);
             overflow: hidden;
             opacity: 0;
             transform: translateY(40px);
@@ -719,7 +782,7 @@
         .social-links a {
             color: var(--text-secondary);
             font-size: 1.8rem;
-            transition: color var(--transition-speed), transform var(--transition-speed);
+            transition: color var(--transition-speed), transform var(--transition-speed), background-color var(--transition-speed), box-shadow var(--transition-speed);
             padding: 0.5rem;
             border-radius: 50%;
             background-color: rgba(255, 255, 255, 0.05);
@@ -732,8 +795,9 @@
         
         .social-links a:hover {
             color: var(--main-color);
-            transform: translateY(-5px);
+            transform: translateY(-5px) scale(1.1);
             background-color: rgba(255, 255, 255, 0.1);
+            box-shadow: var(--glow-main);
         }
         
         @media (max-width: 768px) {
@@ -956,6 +1020,13 @@
         .animate-on-scroll.visible {
             opacity: 1;
             transform: translateY(0);
+            animation: appearWithGlow 1s forwards;
+        }
+        
+        @keyframes appearWithGlow {
+            0% { box-shadow: 0 0 0 rgba(180, 150, 255, 0); }
+            50% { box-shadow: 0 0 30px rgba(180, 150, 255, 0.3); }
+            100% { box-shadow: var(--subtle-shadow); }
         }
 
         /* Landing animations for main content with improved easing */
@@ -1335,6 +1406,12 @@
             text-align: center;
         }
         
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+            box-shadow: var(--glow-main);
+        }
+        
         .nav-links a::before {
             content: '';
             position: absolute;
@@ -1344,11 +1421,6 @@
             height: 100%;
             background: linear-gradient(120deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
             border-radius: 50px;
-        }
-        
-        .nav-links a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
         }
         
         .nav-links a:hover::before {
@@ -1634,9 +1706,100 @@
                 padding-top: 4rem;
             }
         }
+        
+        /* Animated particles background */
+        .particles-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(0) translateX(0);
+            }
+            25% {
+                transform: translateY(-20vh) translateX(10vw);
+            }
+            50% {
+                transform: translateY(-40vh) translateX(-10vw);
+            }
+            75% {
+                transform: translateY(-60vh) translateX(5vw);
+            }
+            100% {
+                transform: translateY(-100vh) translateX(-5vw);
+            }
+        }
+        
+        /* Enhance section transitions */
+        .settings-showcase, .app-showcase, .download-section {
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out, box-shadow 0.5s ease-out;
+        }
+        
+        .settings-showcase:hover, .app-showcase:hover, .download-section:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow), var(--glow-main);
+        }
+        
+        /* Fix hover effects to be more precise */
+        .stat-panel:hover {
+            box-shadow: none;
+        }
+        
+        .stat-panel.max-speed:hover {
+            box-shadow: var(--glow-orange), var(--glow-accent);
+            transform: translateY(-5px);
+        }
+        
+        .stat-panel.avg-speed:hover {
+            box-shadow: var(--glow-green), var(--glow-accent);
+            transform: translateY(-5px);
+        }
+        
+        .stat-panel.distance:hover {
+            box-shadow: var(--glow-blue), var(--glow-accent);
+            transform: translateY(-5px);
+        }
+        
+        .stat-panel.time:hover {
+            box-shadow: var(--glow-purple), var(--glow-accent);
+            transform: translateY(-5px);
+        }
+        
+        /* Make section hovers more precise */
+        .settings-showcase:hover, .app-showcase:hover, .download-section:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow), var(--glow-main);
+        }
+        
+        /* Ensure hover effects only work with direct hover */
+        .nav-links a:hover,
+        .social-links a:hover,
+        .download-button:hover {
+            pointer-events: auto;
+        }
+        
+        .speedometer-circle {
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Animated Background Particles -->
+    <div id="particles-background" class="particles-background"></div>
+    
     <!-- Preloader -->
     <div class="preloader" id="preloader">
         <div class="loader">
@@ -2336,6 +2499,30 @@
                 backgroundArc.setAttribute("fill", "none");
                 backgroundArc.setAttribute("stroke-linecap", "round");
                 
+                // Add subtle animated glow to the background arc
+                const glowFilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+                glowFilter.setAttribute("id", "speedometerGlow");
+                glowFilter.setAttribute("x", "-30%");
+                glowFilter.setAttribute("y", "-30%");
+                glowFilter.setAttribute("width", "160%");
+                glowFilter.setAttribute("height", "160%");
+                
+                const feGaussianBlur = document.createElementNS("http://www.w3.org/2000/svg", "feGaussianBlur");
+                feGaussianBlur.setAttribute("stdDeviation", "5");
+                feGaussianBlur.setAttribute("result", "blur");
+                
+                const feComposite = document.createElementNS("http://www.w3.org/2000/svg", "feComposite");
+                feComposite.setAttribute("in", "SourceGraphic");
+                feComposite.setAttribute("in2", "blur");
+                feComposite.setAttribute("operator", "arithmetic");
+                feComposite.setAttribute("k1", "0");
+                feComposite.setAttribute("k2", "0.5");
+                feComposite.setAttribute("k3", "0.5");
+                feComposite.setAttribute("k4", "0");
+                
+                glowFilter.appendChild(feGaussianBlur);
+                glowFilter.appendChild(feComposite);
+                
                 // Create foreground arc (speedometer progress)
                 const foregroundArc = document.createElementNS("http://www.w3.org/2000/svg", "path");
                 foregroundArc.setAttribute("id", "speedArc");
@@ -2344,15 +2531,27 @@
                 foregroundArc.setAttribute("stroke-width", "10");
                 foregroundArc.setAttribute("fill", "none");
                 foregroundArc.setAttribute("stroke-linecap", "round");
+                foregroundArc.setAttribute("filter", "url(#speedometerGlow)");
                 
-                // Create gradient
+                // Create animated gradient
                 const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
                 gradient.setAttribute("id", "speedGradient");
                 gradient.setAttribute("gradientUnits", "userSpaceOnUse");
-                gradient.setAttribute("x1", "0");
-                gradient.setAttribute("y1", "0");
-                gradient.setAttribute("x2", "300");
-                gradient.setAttribute("y2", "300");
+                gradient.setAttribute("x1", "0%");
+                gradient.setAttribute("y1", "0%");
+                gradient.setAttribute("x2", "100%");
+                gradient.setAttribute("y2", "100%");
+                
+                // Add animation to gradient
+                const animateTransform = document.createElementNS("http://www.w3.org/2000/svg", "animateTransform");
+                animateTransform.setAttribute("attributeName", "gradientTransform");
+                animateTransform.setAttribute("type", "rotate");
+                animateTransform.setAttribute("from", "0 150 150");
+                animateTransform.setAttribute("to", "360 150 150");
+                animateTransform.setAttribute("dur", "10s");
+                animateTransform.setAttribute("repeatCount", "indefinite");
+                
+                gradient.appendChild(animateTransform);
                 
                 // Gradient stops
                 const stops = [
@@ -2373,12 +2572,22 @@
                 // Append elements to SVG
                 const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
                 defs.appendChild(gradient);
+                defs.appendChild(glowFilter);
                 svg.appendChild(defs);
                 svg.appendChild(backgroundArc);
                 svg.appendChild(foregroundArc);
                 
                 // Insert SVG into speedometer
                 speedometerCircle.insertBefore(svg, speedometerCircle.firstChild);
+                
+                // Add subtle pulse animation to the speedometer circle
+                const pulseAnimation = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+                pulseAnimation.setAttribute("attributeName", "opacity");
+                pulseAnimation.setAttribute("values", "0.8;1;0.8");
+                pulseAnimation.setAttribute("dur", "3s");
+                pulseAnimation.setAttribute("repeatCount", "indefinite");
+                
+                foregroundArc.appendChild(pulseAnimation);
             }
             
             // SVG arc description function
@@ -2576,6 +2785,49 @@
                 
                 clearInterval(animationInterval);
                 clearInterval(timeInterval);
+            }
+        });
+        
+        // Animated particles background
+        document.addEventListener('DOMContentLoaded', function() {
+            const particlesContainer = document.getElementById('particles-background');
+            const particleCount = 20;
+            
+            // Create particles
+            for (let i = 0; i < particleCount; i++) {
+                createParticle(particlesContainer);
+            }
+            
+            function createParticle(container) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random size (small)
+                const size = Math.random() * 4 + 2;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random position
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.top = `${Math.random() * 100}vh`;
+                
+                // Random opacity
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                
+                // Random color (purples and pinks)
+                const colors = ['#b496ff', '#9370ff', '#8a2be2', '#ff529a', '#ff69b4'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.backgroundColor = randomColor;
+                particle.style.boxShadow = `0 0 ${size + 2}px ${randomColor}`;
+                
+                // Random animation duration
+                const duration = Math.random() * 20 + 10;
+                particle.style.animation = `floatParticle ${duration}s linear infinite`;
+                
+                // Random delay
+                particle.style.animationDelay = `${Math.random() * 5}s`;
+                
+                container.appendChild(particle);
             }
         });
     </script>
